@@ -15,9 +15,11 @@ type Format = "png" | "jpg";
 type Status = "queued" | "processing" | "done";
 
 // char cell dimensions used consistently across generation + rendering
-const CHAR_W = 0.6;  // relative to font size
-const CHAR_H = 1.15; // relative to font size
-const ASPECT  = CHAR_W / CHAR_H; // ~0.522 — corrects portrait squish
+const CHAR_W   = 0.6;
+const CHAR_H   = 1.15;
+const ASPECT   = CHAR_W / CHAR_H;
+const MAX_FILES = 20;
+const MAX_DIM   = 1920; // resize before processing to cap RAM usage
 
 interface BatchItem {
   id: string;
@@ -28,12 +30,28 @@ interface BatchItem {
   status: Status;
 }
 
+// Resize large images to MAX_DIM before processing to cap memory usage
+function resizeSrc(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+      if (scale === 1) { resolve(src); return; }
+      const canvas = document.createElement("canvas");
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL());
+    };
+    img.src = src;
+  });
+}
+
 function asciiFromSrc(src: string, w: number, cs: CharSet, inv: boolean): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       const chars = CHAR_SETS[cs];
-      // Use correct aspect ratio so portrait images aren't squished
       const h = Math.round(w * (img.height / img.width) * ASPECT);
       const canvas = document.createElement("canvas");
       canvas.width = w;
@@ -100,7 +118,10 @@ export default function AsciiArt() {
   function addFiles(files: FileList | File[]) {
     const imageFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
     if (!imageFiles.length) return;
-    const newItems: BatchItem[] = imageFiles.map((file) => ({
+    const slots = MAX_FILES - items.length;
+    if (slots <= 0) return;
+    const allowed = imageFiles.slice(0, slots);
+    const newItems: BatchItem[] = allowed.map((file) => ({
       id: `${file.name}-${Date.now()}-${Math.random()}`,
       file, src: "", ascii: "", previewUrl: "", status: "queued",
     }));
@@ -125,7 +146,8 @@ export default function AsciiArt() {
       setItems((prev) => prev.map((it) =>
         it.id === item.id ? { ...it, status: "processing" } : it
       ));
-      const ascii = await asciiFromSrc(item.src, width, charSet, inverted);
+      const resized = await resizeSrc(item.src);
+      const ascii = await asciiFromSrc(resized, width, charSet, inverted);
       const previewUrl = renderPreviewUrl(ascii, theme);
       setItems((prev) => prev.map((it) =>
         it.id === item.id ? { ...it, ascii, previewUrl, status: "done" } : it
@@ -188,7 +210,7 @@ export default function AsciiArt() {
         >
           <div className="text-3xl mb-2">🖼️</div>
           <p className="text-zinc-400 text-sm">Drop images here or click to browse</p>
-          <p className="text-zinc-600 text-xs mt-1">JPG · PNG · GIF · WebP · Multiple files supported</p>
+          <p className="text-zinc-600 text-xs mt-1">JPG · PNG · GIF · WebP · Max {MAX_FILES} images</p>
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
           onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }} />
@@ -198,7 +220,7 @@ export default function AsciiArt() {
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
               <p className="text-xs font-medium text-zinc-400">
-                {items.length} image{items.length !== 1 ? "s" : ""} in queue
+                {items.length} / {MAX_FILES} images in queue
               </p>
               <button onClick={() => { setItems([]); setDoneCount(0); }}
                 className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
