@@ -14,20 +14,27 @@ type Theme = "dark" | "light";
 type Format = "png" | "jpg";
 type Status = "queued" | "processing" | "done";
 
+// char cell dimensions used consistently across generation + rendering
+const CHAR_W = 0.6;  // relative to font size
+const CHAR_H = 1.15; // relative to font size
+const ASPECT  = CHAR_W / CHAR_H; // ~0.522 — corrects portrait squish
+
 interface BatchItem {
   id: string;
   file: File;
   src: string;
   ascii: string;
+  previewUrl: string; // canvas rendered at small size
   status: Status;
 }
 
-function asciiFromCanvas(src: string, w: number, cs: CharSet, inv: boolean): Promise<string> {
+function asciiFromSrc(src: string, w: number, cs: CharSet, inv: boolean): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
       const chars = CHAR_SETS[cs];
-      const h = Math.round(w * (img.height / img.width) * 0.45);
+      // Use correct aspect ratio so portrait images aren't squished
+      const h = Math.round(w * (img.height / img.width) * ASPECT);
       const canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
@@ -39,8 +46,7 @@ function asciiFromCanvas(src: string, w: number, cs: CharSet, inv: boolean): Pro
         for (let x = 0; x < w; x++) {
           const i = (y * w + x) * 4;
           const b = (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
-          const brightness = inv ? 1 - b : b;
-          result += chars[Math.floor(brightness * (chars.length - 1))];
+          result += chars[Math.floor((inv ? 1 - b : b) * (chars.length - 1))];
         }
         result += "\n";
       }
@@ -50,35 +56,44 @@ function asciiFromCanvas(src: string, w: number, cs: CharSet, inv: boolean): Pro
   });
 }
 
+function renderCanvas(ascii: string, theme: Theme, fontSize: number): HTMLCanvasElement {
+  const lines = ascii.split("\n").filter((_, i, a) => i < a.length - 1); // trim trailing newline
+  const cols = Math.max(...lines.map((l) => l.length));
+  const cw = fontSize * CHAR_W;
+  const ch = fontSize * CHAR_H;
+  const canvas = document.createElement("canvas");
+  canvas.width  = Math.ceil(cols * cw);
+  canvas.height = Math.ceil(lines.length * ch);
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = theme === "dark" ? "#09090b" : "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = `${fontSize}px "Courier New", monospace`;
+  ctx.fillStyle = theme === "dark" ? "#e4e4e7" : "#18181b";
+  lines.forEach((line, i) => ctx.fillText(line, 0, (i + 1) * ch));
+  return canvas;
+}
+
 function renderToBlob(ascii: string, theme: Theme, format: Format): Promise<Blob> {
   return new Promise((resolve) => {
-    const lines = ascii.split("\n");
-    const cols = lines[0]?.length ?? 0;
-    const fontSize = 10;
-    const charW = fontSize * 0.6;
-    const charH = fontSize * 1.15;
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.ceil(cols * charW);
-    canvas.height = Math.ceil(lines.length * charH);
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = theme === "dark" ? "#09090b" : "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `${fontSize}px "Courier New", monospace`;
-    ctx.fillStyle = theme === "dark" ? "#e4e4e7" : "#18181b";
-    lines.forEach((line, i) => ctx.fillText(line, 0, (i + 1) * charH));
+    const canvas = renderCanvas(ascii, theme, 10);
     const mime = format === "jpg" ? "image/jpeg" : "image/png";
     canvas.toBlob((b) => resolve(b!), mime, format === "jpg" ? 0.92 : undefined);
   });
 }
 
+// Small preview — renders at reduced font size so it fits in a card
+function renderPreviewUrl(ascii: string, theme: Theme): string {
+  return renderCanvas(ascii, theme, 3).toDataURL();
+}
+
 export default function AsciiArt() {
   const [items, setItems] = useState<BatchItem[]>([]);
-  const [width, setWidth] = useState(100);
-  const [charSet, setCharSet] = useState<CharSet>("classic");
+  const [width, setWidth]       = useState(100);
+  const [charSet, setCharSet]   = useState<CharSet>("classic");
   const [inverted, setInverted] = useState(false);
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [format, setFormat] = useState<Format>("png");
-  const [running, setRunning] = useState(false);
+  const [theme, setTheme]       = useState<Theme>("dark");
+  const [format, setFormat]     = useState<Format>("png");
+  const [running, setRunning]   = useState(false);
   const [doneCount, setDoneCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,27 +102,17 @@ export default function AsciiArt() {
     if (!imageFiles.length) return;
     const newItems: BatchItem[] = imageFiles.map((file) => ({
       id: `${file.name}-${Date.now()}-${Math.random()}`,
-      file,
-      src: "",
-      ascii: "",
-      status: "queued",
+      file, src: "", ascii: "", previewUrl: "", status: "queued",
     }));
-    // Read data URLs
     newItems.forEach((item) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const src = e.target?.result as string;
-        setItems((prev) =>
-          prev.map((it) => (it.id === item.id ? { ...it, src } : it))
-        );
+        setItems((prev) => prev.map((it) => it.id === item.id ? { ...it, src } : it));
       };
       reader.readAsDataURL(item.file);
     });
     setItems((prev) => [...prev, ...newItems]);
-  }
-
-  function removeItem(id: string) {
-    setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
   const handleGenerate = useCallback(async () => {
@@ -117,18 +122,18 @@ export default function AsciiArt() {
     setDoneCount(0);
 
     for (const item of targets) {
-      setItems((prev) =>
-        prev.map((it) => (it.id === item.id ? { ...it, status: "processing" } : it))
-      );
-      const ascii = await asciiFromCanvas(item.src, width, charSet, inverted);
-      setItems((prev) =>
-        prev.map((it) => (it.id === item.id ? { ...it, ascii, status: "done" } : it))
-      );
+      setItems((prev) => prev.map((it) =>
+        it.id === item.id ? { ...it, status: "processing" } : it
+      ));
+      const ascii = await asciiFromSrc(item.src, width, charSet, inverted);
+      const previewUrl = renderPreviewUrl(ascii, theme);
+      setItems((prev) => prev.map((it) =>
+        it.id === item.id ? { ...it, ascii, previewUrl, status: "done" } : it
+      ));
       setDoneCount((n) => n + 1);
     }
-
     setRunning(false);
-  }, [items, width, charSet, inverted, running]);
+  }, [items, width, charSet, inverted, theme, running]);
 
   async function downloadOne(item: BatchItem) {
     const blob = await renderToBlob(item.ascii, theme, format);
@@ -145,25 +150,22 @@ export default function AsciiArt() {
     if (!done.length) return;
     const JSZip = (await import("jszip")).default;
     const zip = new JSZip();
-    await Promise.all(
-      done.map(async (item) => {
-        const blob = await renderToBlob(item.ascii, theme, format);
-        const name = `${item.file.name.replace(/\.[^.]+$/, "")}_ascii.${format}`;
-        zip.file(name, blob);
-      })
-    );
+    await Promise.all(done.map(async (item) => {
+      const blob = await renderToBlob(item.ascii, theme, format);
+      zip.file(`${item.file.name.replace(/\.[^.]+$/, "")}_ascii.${format}`, blob);
+    }));
     const bytes = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(bytes);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `ascii-art-batch.zip`;
+    a.download = "ascii-art-batch.zip";
     a.click();
     URL.revokeObjectURL(url);
   }
 
-  const doneItems = items.filter((it) => it.status === "done");
-  const totalReady = items.filter((it) => it.src).length;
-  const progress = totalReady ? Math.round((doneCount / totalReady) * 100) : 0;
+  const doneItems   = items.filter((it) => it.status === "done");
+  const totalReady  = items.filter((it) => it.src).length;
+  const progress    = totalReady ? Math.round((doneCount / totalReady) * 100) : 0;
 
   return (
     <div className="h-full overflow-y-auto">
@@ -186,50 +188,42 @@ export default function AsciiArt() {
         >
           <div className="text-3xl mb-2">🖼️</div>
           <p className="text-zinc-400 text-sm">Drop images here or click to browse</p>
-          <p className="text-zinc-600 text-xs mt-1">JPG, PNG, GIF, WebP · Multiple files supported</p>
+          <p className="text-zinc-600 text-xs mt-1">JPG · PNG · GIF · WebP · Multiple files supported</p>
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }}
-        />
+        <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden"
+          onChange={(e) => { if (e.target.files) addFiles(e.target.files); e.target.value = ""; }} />
 
-        {/* Queue list */}
+        {/* Queue */}
         {items.length > 0 && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
-              <p className="text-xs font-medium text-zinc-400">{items.length} image{items.length !== 1 ? "s" : ""} queued</p>
-              <button
-                onClick={() => { setItems([]); setDoneCount(0); }}
-                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
-              >
+              <p className="text-xs font-medium text-zinc-400">
+                {items.length} image{items.length !== 1 ? "s" : ""} in queue
+              </p>
+              <button onClick={() => { setItems([]); setDoneCount(0); }}
+                className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
                 Clear all
               </button>
             </div>
             <div className="divide-y divide-zinc-800 max-h-48 overflow-y-auto">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 px-4 py-2.5">
-                  {item.src && (
+                  {item.src
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.src} alt="" className="w-8 h-8 object-cover rounded shrink-0" />
-                  )}
-                  {!item.src && <div className="w-8 h-8 bg-zinc-800 rounded shrink-0 animate-pulse" />}
+                    ? <img src={item.src} alt="" className="w-8 h-8 object-cover rounded shrink-0" />
+                    : <div className="w-8 h-8 bg-zinc-800 rounded shrink-0 animate-pulse" />
+                  }
                   <p className="text-xs text-zinc-300 flex-1 truncate">{item.file.name}</p>
                   <span className={`text-xs font-medium shrink-0 ${
-                    item.status === "done" ? "text-green-400" :
+                    item.status === "done"       ? "text-green-400" :
                     item.status === "processing" ? "text-violet-400 animate-pulse" :
-                    "text-zinc-600"
+                                                   "text-zinc-600"
                   }`}>
                     {item.status === "done" ? "✓ Done" : item.status === "processing" ? "Processing…" : "Queued"}
                   </span>
                   {item.status !== "processing" && (
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="text-zinc-700 hover:text-zinc-400 transition-colors text-sm shrink-0"
-                    >
+                    <button onClick={() => setItems((p) => p.filter((it) => it.id !== item.id))}
+                      className="text-zinc-700 hover:text-zinc-400 text-base leading-none shrink-0 transition-colors">
                       ×
                     </button>
                   )}
@@ -242,7 +236,6 @@ export default function AsciiArt() {
         {/* Settings */}
         {items.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Width */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
               <div className="flex justify-between mb-2">
                 <p className="text-xs font-medium text-zinc-400">Width</p>
@@ -253,7 +246,6 @@ export default function AsciiArt() {
                 className="w-full accent-violet-500" />
             </div>
 
-            {/* Char set */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
               <p className="text-xs font-medium text-zinc-400 mb-2">Character set</p>
               <select value={charSet} onChange={(e) => setCharSet(e.target.value as CharSet)}
@@ -265,7 +257,6 @@ export default function AsciiArt() {
               </select>
             </div>
 
-            {/* Theme */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
               <p className="text-xs font-medium text-zinc-400 mb-2">Background</p>
               <div className="flex gap-2">
@@ -280,13 +271,11 @@ export default function AsciiArt() {
               </div>
             </div>
 
-            {/* Options */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
               <p className="text-xs font-medium text-zinc-400 mb-2">Options</p>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={inverted}
-                  onChange={(e) => setInverted(e.target.checked)}
-                  className="accent-violet-500" />
+                <input type="checkbox" checked={inverted} className="accent-violet-500"
+                  onChange={(e) => setInverted(e.target.checked)} />
                 <span className="text-xs text-zinc-300">Invert brightness</span>
               </label>
             </div>
@@ -296,17 +285,16 @@ export default function AsciiArt() {
         {/* Actions */}
         {items.length > 0 && (
           <div className="flex flex-wrap gap-2 sm:gap-3">
-            <button
-              onClick={handleGenerate}
-              disabled={running || totalReady === 0}
-              className="flex-1 min-w-[140px] py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
-            >
-              {running ? `Generating… ${doneCount}/${totalReady}` : `Generate ${totalReady > 1 ? `All ${totalReady}` : ""}`}
+            <button onClick={handleGenerate} disabled={running || totalReady === 0}
+              className="flex-1 min-w-[140px] py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors">
+              {running
+                ? `Generating… ${doneCount}/${totalReady}`
+                : `Generate${totalReady > 1 ? ` All ${totalReady}` : ""}`}
             </button>
             <div className="flex rounded-xl overflow-hidden border border-zinc-700">
               {(["png", "jpg"] as Format[]).map((f) => (
                 <button key={f} onClick={() => setFormat(f)}
-                  className={`px-4 py-3 text-xs font-medium transition-colors uppercase ${
+                  className={`px-4 py-3 text-xs font-medium uppercase transition-colors ${
                     format === f ? "bg-violet-600 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                   }`}>
                   {f}
@@ -314,10 +302,8 @@ export default function AsciiArt() {
               ))}
             </div>
             {doneItems.length > 1 && (
-              <button
-                onClick={downloadAll}
-                className="flex-1 min-w-[140px] py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-medium text-sm transition-colors"
-              >
+              <button onClick={downloadAll}
+                className="flex-1 min-w-[140px] py-3 rounded-xl bg-green-600 hover:bg-green-500 text-white font-medium text-sm transition-colors">
                 Download All ({doneItems.length}) .zip
               </button>
             )}
@@ -343,22 +329,25 @@ export default function AsciiArt() {
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {doneItems.map((item) => (
-                <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                  {/* ASCII mini-preview */}
-                  <div className={`h-40 overflow-hidden p-2 font-mono text-[4px] leading-[1.1] whitespace-pre select-none ${
-                    theme === "dark" ? "bg-zinc-950 text-zinc-400" : "bg-white text-zinc-700"
+                <div key={item.id} className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden flex flex-col">
+                  {/* Canvas-rendered preview — correct aspect ratio */}
+                  <div className={`flex items-center justify-center p-2 ${
+                    theme === "dark" ? "bg-zinc-950" : "bg-white"
                   }`}>
-                    {item.ascii}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.previewUrl}
+                      alt={`ASCII preview of ${item.file.name}`}
+                      className="max-h-56 w-auto object-contain rounded"
+                    />
                   </div>
-                  {/* Card footer */}
-                  <div className="flex items-center gap-2 px-3 py-2.5">
+                  {/* Footer */}
+                  <div className="flex items-center gap-2 px-3 py-2.5 border-t border-zinc-800 mt-auto">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.src} alt="" className="w-7 h-7 object-cover rounded shrink-0" />
                     <p className="text-xs text-zinc-400 flex-1 truncate">{item.file.name}</p>
-                    <button
-                      onClick={() => downloadOne(item)}
-                      className="shrink-0 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-1.5 rounded-lg transition-colors"
-                    >
+                    <button onClick={() => downloadOne(item)}
+                      className="shrink-0 text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 px-2.5 py-1.5 rounded-lg transition-colors">
                       ↓ .{format}
                     </button>
                   </div>
