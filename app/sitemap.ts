@@ -11,7 +11,10 @@ const pages = [
   { path: "/pdf-ocr",         priority: 0.8 },
   { path: "/ascii-art",       priority: 0.8 },
   { path: "/file-compressor", priority: 0.8 },
-  { path: "/image-to-pdf",   priority: 0.8 },
+  { path: "/image-to-pdf",        priority: 0.8 },
+  { path: "/pdf-merger",         priority: 0.8 },
+  { path: "/watermark-pdf",      priority: 0.8 },
+  { path: "/invoice-generator",  priority: 0.8 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -16,6 +16,9 @@ export const tools: Tool[] = [
   { id: "ascii",    path: "/ascii-art",        icon: "🖼️",  label: "ASCII Art",       desc: "Convert any image into ASCII art. Download as PNG or JPG.",                       category: "Fun"     },
   { id: "compress", path: "/file-compressor",  icon: "📦",  label: "File Compressor", desc: "Compress images, PDFs, and DOCX files locally. Nothing is uploaded to a server.", category: "Utility" },
   { id: "img2pdf",  path: "/image-to-pdf",    icon: "📑",  label: "Image to PDF",    desc: "Combine multiple images into a single PDF. Reorder, choose page size, and download.", category: "Utility" },
+  { id: "merger",   path: "/pdf-merger",      icon: "📎",  label: "PDF Merger",      desc: "Combine multiple PDF files into one. Reorder pages before merging.",                    category: "PDF"     },
+  { id: "watermark",path: "/watermark-pdf",   icon: "🔏",  label: "Watermark PDF",   desc: "Add a text watermark to every page of a PDF. Choose opacity, angle, and layout.",      category: "PDF"     },
+  { id: "invoice",  path: "/invoice-generator",icon: "🧾", label: "Invoice Generator",desc: "Create and download professional PDF invoices. Add items, tax, and notes.",            category: "Utility" },
 ];
 
 export const faqItems = [
@@ -58,6 +61,21 @@ export const faqItems = [
     tool: "📑 Image to PDF",
     q: "What is Image to PDF?",
     a: "Upload multiple images and combine them into a single PDF. You can reorder the images, choose a page size (fit to image, A4, or Letter), and download the result. Runs entirely in your browser.",
+  },
+  {
+    tool: "📎 PDF Merger",
+    q: "What is PDF Merger?",
+    a: "Upload multiple PDF files, reorder them, and merge them into a single PDF. Useful for combining reports, scans, or chapters into one document. Runs entirely in your browser.",
+  },
+  {
+    tool: "🔏 Watermark PDF",
+    q: "What is Watermark PDF?",
+    a: "Add a custom text watermark to every page of a PDF. Choose the text, opacity (light, medium, heavy), angle (diagonal or horizontal), and layout (centered or tiled). Download the watermarked PDF instantly.",
+  },
+  {
+    tool: "🧾 Invoice Generator",
+    q: "What is Invoice Generator?",
+    a: "Fill in your business info, client details, line items, tax rate, and notes — then download a professional PDF invoice. Supports multiple currencies. Nothing is uploaded to a server.",
   },
 ];
 
