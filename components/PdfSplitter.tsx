@@ -79,7 +79,7 @@ export default function PdfSplitter() {
   }
 
   function downloadChunk(chunk: Chunk) {
-    const blob = new Blob([chunk.bytes], { type: "application/pdf" });
+    const blob = new Blob([chunk.bytes.buffer as ArrayBuffer], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
