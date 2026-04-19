@@ -11,6 +11,7 @@ const pages = [
   { path: "/pdf-ocr",         priority: 0.8 },
   { path: "/ascii-art",       priority: 0.8 },
   { path: "/file-compressor", priority: 0.8 },
+  { path: "/image-to-pdf",   priority: 0.8 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -15,6 +15,7 @@ export const tools: Tool[] = [
   { id: "ocr",      path: "/pdf-ocr",          icon: "🔍",  label: "PDF OCR",         desc: "Extract text from scanned PDFs. Output as a text-based PDF. Max 50 pages.",       category: "PDF"     },
   { id: "ascii",    path: "/ascii-art",        icon: "🖼️",  label: "ASCII Art",       desc: "Convert any image into ASCII art. Download as PNG or JPG.",                       category: "Fun"     },
   { id: "compress", path: "/file-compressor",  icon: "📦",  label: "File Compressor", desc: "Compress images, PDFs, and DOCX files locally. Nothing is uploaded to a server.", category: "Utility" },
+  { id: "img2pdf",  path: "/image-to-pdf",    icon: "📑",  label: "Image to PDF",    desc: "Combine multiple images into a single PDF. Reorder, choose page size, and download.", category: "Utility" },
 ];
 
 export const faqItems = [
@@ -52,6 +53,11 @@ export const faqItems = [
     tool: "📦 File Compressor",
     q: "What is File Compressor?",
     a: "Compress images (JPG/PNG/WebP), PDFs, or DOCX files directly in your browser. Nothing is uploaded to a server. Images can be reduced by up to 80%.",
+  },
+  {
+    tool: "📑 Image to PDF",
+    q: "What is Image to PDF?",
+    a: "Upload multiple images and combine them into a single PDF. You can reorder the images, choose a page size (fit to image, A4, or Letter), and download the result. Runs entirely in your browser.",
   },
 ];
 
