@@ -11,8 +11,10 @@ export const metadata: Metadata = {
     "Open-source tools to compress files, explain GitHub repos, read PDFs aloud, extract text with OCR, convert images to ASCII art, and more. No sign-up, no ads, nothing uploaded to a server.",
   keywords: [
     "file compressor", "pdf compressor", "image compressor", "docx compressor",
-    "pdf ocr", "ocr online", "pdf splitter", "pdf reader", "repo explainer",
-    "github repo explainer", "doc qa", "ascii art generator", "ai tools", "free tools",
+    "pdf ocr", "ocr online", "pdf splitter", "pdf reader", "pdf merger",
+    "watermark pdf", "image to pdf", "invoice generator", "letterhead generator",
+    "repo explainer", "github repo explainer", "doc qa", "ascii art generator",
+    "ai tools", "free tools", "online pdf tools", "free invoice maker",
   ],
   metadataBase: new URL("https://ganbaro.vercel.app"),
   openGraph: {
