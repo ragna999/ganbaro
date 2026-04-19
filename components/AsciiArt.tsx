@@ -116,13 +116,11 @@ export default function AsciiArt() {
   }
 
   return (
-    /* Outer: scrolls on mobile when content is taller than viewport */
     <div className="h-full overflow-y-auto">
-      {/* Inner: grows to content on mobile, fixed h-full on desktop */}
-      <div className="flex flex-col p-4 sm:p-8 sm:h-full">
+      <div className="p-4 sm:p-8">
 
         {/* Header */}
-        <div className="mb-4 sm:mb-6 sm:shrink-0">
+        <div className="mb-4 sm:mb-6">
           <h2 className="text-2xl font-bold text-zinc-100">Image to ASCII Art</h2>
           <p className="text-zinc-500 mt-1 text-sm">
             Convert any image into ASCII art and download as PNG or JPG.
@@ -130,7 +128,7 @@ export default function AsciiArt() {
         </div>
 
         {/* Controls */}
-        <div className="sm:shrink-0 space-y-3 mb-5">
+        <div className="space-y-3 mb-5">
           {/* Upload */}
           <div
             onClick={() => fileInputRef.current?.click()}
@@ -271,10 +269,10 @@ export default function AsciiArt() {
           )}
         </div>
 
-        {/* ASCII Preview — fixed min-height on mobile, fills remaining space on desktop */}
+        {/* ASCII Preview */}
         {ascii && !processing && (
           <div
-            className={`min-h-[280px] sm:flex-1 sm:min-h-0 overflow-auto rounded-xl p-4 font-mono text-[7px] leading-[1.1] whitespace-pre ${
+            className={`h-[360px] sm:h-[480px] overflow-auto rounded-xl p-4 font-mono text-[7px] leading-[1.1] whitespace-pre ${
               theme === "dark" ? "bg-zinc-950 text-zinc-300" : "bg-white text-zinc-900"
             }`}
           >
@@ -283,7 +281,7 @@ export default function AsciiArt() {
         )}
 
         {processing && (
-          <div className="py-16 sm:flex-1 flex items-center justify-center">
+          <div className="py-20 flex items-center justify-center">
             <div className="flex gap-1">
               {[0, 150, 300].map((d) => (
                 <span key={d} className="w-2 h-2 bg-violet-500 rounded-full animate-bounce"
@@ -294,7 +292,7 @@ export default function AsciiArt() {
         )}
 
         {!imageSrc && (
-          <div className="py-16 sm:flex-1 flex items-center justify-center">
+          <div className="py-20 flex items-center justify-center">
             <div className="text-center">
               <div className="text-5xl mb-4">🖼️</div>
               <p className="text-zinc-500 text-sm">Upload an image to convert</p>
