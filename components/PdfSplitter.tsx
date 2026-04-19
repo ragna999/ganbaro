@@ -97,9 +97,9 @@ export default function PdfSplitter() {
   const numChunks = totalPages ? Math.ceil(totalPages / pagesPerChunk) : 0;
 
   return (
-    <div className="h-full flex flex-col p-8 overflow-y-auto">
+    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
       {/* Header */}
-      <div className="mb-7 shrink-0">
+      <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF Splitter</h2>
         <p className="text-zinc-500 mt-1 text-sm">
           Split large PDFs into smaller chunks. Use before PDF OCR for large files.
@@ -147,7 +147,7 @@ export default function PdfSplitter() {
 
         {/* Config */}
         {totalPages > 0 && (
-          <div className="flex items-center gap-4 bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
             <div className="flex-1">
               <p className="text-sm font-medium text-zinc-300">Pages per chunk</p>
               <p className="text-xs text-zinc-600 mt-0.5">
@@ -162,7 +162,7 @@ export default function PdfSplitter() {
                 step={10}
                 value={pagesPerChunk}
                 onChange={(e) => setPagesPerChunk(Number(e.target.value))}
-                className="w-32 accent-violet-500"
+                className="flex-1 sm:w-32 accent-violet-500"
               />
               <span className="text-sm font-mono text-violet-400 w-16 text-right">
                 {pagesPerChunk} pages

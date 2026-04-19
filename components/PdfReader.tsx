@@ -182,9 +182,9 @@ export default function PdfReader() {
   }
 
   return (
-    <div className="h-full flex flex-col p-8">
+    <div className="h-full flex flex-col p-4 sm:p-8">
       {/* Header */}
-      <div className="mb-5 shrink-0">
+      <div className="mb-4 sm:mb-5 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF Reader</h2>
         <p className="text-zinc-500 mt-1 text-sm">Upload a PDF and listen to it read aloud.</p>
         <span className="inline-block mt-2 text-xs bg-zinc-800/80 text-zinc-500 px-2.5 py-1 rounded-md">

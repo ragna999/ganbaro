@@ -7,12 +7,12 @@ export default function HomePage() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Hero */}
-      <div className="text-center px-6 pt-20 pb-14">
+      <div className="text-center px-4 sm:px-6 pt-10 sm:pt-20 pb-8 sm:pb-14">
         <div className="text-6xl mb-5">🔥</div>
-        <h1 className="text-5xl font-extrabold text-white tracking-tight mb-4">
+        <h1 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
           Ganbaro
         </h1>
-        <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed">
+        <p className="text-zinc-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
           A collection of open-source AI & utility tools — simple, fast, and free.
           No sign-up, no ads.
         </p>

@@ -194,9 +194,9 @@ export default function FileCompressor() {
     : 0;
 
   return (
-    <div className="h-full flex flex-col p-8 overflow-y-auto">
+    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
       {/* Header */}
-      <div className="mb-6 shrink-0">
+      <div className="mb-4 sm:mb-6 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">File Compressor</h2>
         <p className="text-zinc-500 mt-1 text-sm">
           Compress images, PDFs, or DOCX files directly in your browser — nothing is uploaded to a server.

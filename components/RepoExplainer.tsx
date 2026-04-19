@@ -101,9 +101,9 @@ export default function RepoExplainer() {
   }
 
   return (
-    <div className="h-full flex flex-col p-8 overflow-y-auto">
+    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
       {/* Header */}
-      <div className="mb-7 shrink-0">
+      <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">Repo Explainer</h2>
         <p className="text-zinc-500 mt-1 text-sm">
           Paste any public GitHub URL to get a comprehensive explanation of the codebase.
@@ -178,7 +178,7 @@ export default function RepoExplainer() {
       {/* Translate section */}
       {output && !loading && (
         <div className="shrink-0 mt-4 space-y-3">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <select
               value={targetLang}
               onChange={(e) => { setTargetLang(e.target.value); setTranslated(""); }}

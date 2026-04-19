@@ -116,9 +116,9 @@ export default function AsciiArt() {
   }
 
   return (
-    <div className="h-full flex flex-col p-8">
+    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
       {/* Header */}
-      <div className="mb-6 shrink-0">
+      <div className="mb-4 sm:mb-6 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">Image to ASCII Art</h2>
         <p className="text-zinc-500 mt-1 text-sm">
           Convert any image into ASCII art and download as PNG or JPG.
@@ -166,7 +166,7 @@ export default function AsciiArt() {
 
         {/* Settings row */}
         {imageSrc && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Width */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3">
               <div className="flex justify-between mb-2">
@@ -235,7 +235,7 @@ export default function AsciiArt() {
 
         {/* Action buttons */}
         {imageSrc && (
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
             <button
               onClick={handleRegenerate}
               disabled={processing}

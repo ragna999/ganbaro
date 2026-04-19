@@ -162,9 +162,9 @@ export default function PdfOcr() {
   const tooLarge = totalPages > 50;
 
   return (
-    <div className="h-full flex flex-col p-8">
+    <div className="h-full flex flex-col p-4 sm:p-8">
       {/* Header */}
-      <div className="mb-7 shrink-0">
+      <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF OCR</h2>
         <p className="text-zinc-500 mt-1 text-sm">
           Extract text from scanned PDFs. Max 50 pages — use PDF Splitter for larger files.
