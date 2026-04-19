@@ -18,7 +18,8 @@ export const tools: Tool[] = [
   { id: "img2pdf",  path: "/image-to-pdf",    icon: "📑",  label: "Image to PDF",    desc: "Combine multiple images into a single PDF. Reorder, choose page size, and download.", category: "Utility" },
   { id: "merger",   path: "/pdf-merger",      icon: "📎",  label: "PDF Merger",      desc: "Combine multiple PDF files into one. Reorder pages before merging.",                    category: "PDF"     },
   { id: "watermark",path: "/watermark-pdf",   icon: "🔏",  label: "Watermark PDF",   desc: "Add a text watermark to every page of a PDF. Choose opacity, angle, and layout.",      category: "PDF"     },
-  { id: "invoice",  path: "/invoice-generator",icon: "🧾", label: "Invoice Generator",desc: "Create and download professional PDF invoices. Add items, tax, and notes.",            category: "Utility" },
+  { id: "invoice",     path: "/invoice-generator",    icon: "🧾", label: "Invoice Generator",    desc: "Create and download professional PDF invoices. Add items, tax, and notes.",            category: "Utility" },
+  { id: "letterhead", path: "/letterhead-generator", icon: "📋", label: "Letterhead Generator", desc: "Design a company letterhead with your logo and brand color. Download as PDF.",          category: "Utility" },
 ];
 
 export const faqItems = [
@@ -76,6 +77,11 @@ export const faqItems = [
     tool: "🧾 Invoice Generator",
     q: "What is Invoice Generator?",
     a: "Fill in your business info, client details, line items, tax rate, and notes — then download a professional PDF invoice. Supports multiple currencies. Nothing is uploaded to a server.",
+  },
+  {
+    tool: "📋 Letterhead Generator",
+    q: "What is Letterhead Generator?",
+    a: "Create a professional company letterhead with your company name, tagline, logo, contact info, and brand color. Choose from three layout styles (Classic, Corporate, Minimal) and download as a PDF ready to use in Word or as a template.",
   },
 ];
 

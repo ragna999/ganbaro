@@ -14,7 +14,8 @@ const pages = [
   { path: "/image-to-pdf",        priority: 0.8 },
   { path: "/pdf-merger",         priority: 0.8 },
   { path: "/watermark-pdf",      priority: 0.8 },
-  { path: "/invoice-generator",  priority: 0.8 },
+  { path: "/invoice-generator",      priority: 0.8 },
+  { path: "/letterhead-generator",   priority: 0.8 },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {
