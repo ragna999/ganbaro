@@ -92,7 +92,7 @@ export default function FileCompressor() {
     const buffer = await f.arrayBuffer();
     const pdf = await PDFDocument.load(buffer, { ignoreEncryption: true });
     const bytes = await pdf.save({ useObjectStreams: true });
-    return new Blob([bytes], { type: "application/pdf" });
+    return new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
   }
 
   // ─── DOCX compression ────────────────────────────────────────────────────
