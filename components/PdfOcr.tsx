@@ -167,7 +167,7 @@ export default function PdfOcr() {
       <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF OCR</h2>
         <p className="text-zinc-500 mt-1 text-sm">
-          Extract text from scanned PDFs. Max 50 pages — use PDF Splitter for larger files.
+          Extract text from scanned PDFs. Max 50 pages. Use PDF Splitter for larger files.
         </p>
       </div>
 
@@ -193,8 +193,8 @@ export default function PdfOcr() {
                 <p className={`text-xs ${tooLarge ? "text-red-400" : "text-zinc-500"}`}>
                   {totalPages > 0
                     ? tooLarge
-                      ? `${totalPages} pages — too large, split first`
-                      : `${totalPages} pages — ready for OCR`
+                      ? `${totalPages} pages, too large. Split first.`
+                      : `${totalPages} pages, ready for OCR`
                     : "Loading info…"}
                 </p>
               </div>
@@ -263,7 +263,7 @@ export default function PdfOcr() {
             />
           </div>
           <p className="text-xs text-zinc-700">
-            Running in your browser — may take a few minutes depending on page complexity.
+            Running in your browser. May take a few minutes depending on page complexity.
           </p>
         </div>
       )}

@@ -8,13 +8,13 @@ export interface Tool {
 }
 
 export const tools: Tool[] = [
-  { id: "repo",     path: "/repo-explainer",  icon: "⚡",  label: "Repo Explainer",  desc: "Explain any public GitHub repo — architecture, tech stack, and key insights.",    category: "AI"      },
+  { id: "repo",     path: "/repo-explainer",  icon: "⚡",  label: "Repo Explainer",  desc: "Explain any public GitHub repo: architecture, tech stack, and key insights.",    category: "AI"      },
   { id: "doc",      path: "/doc-qa",           icon: "📄",  label: "Doc Q&A",         desc: "Upload a PDF and ask anything about its content. Powered by AI.",                 category: "AI"      },
   { id: "reader",   path: "/pdf-reader",       icon: "🎧",  label: "PDF Reader",      desc: "Listen to any text-based PDF read aloud. Adjust speed and voice.",                category: "PDF"     },
   { id: "splitter", path: "/pdf-splitter",     icon: "✂️",  label: "PDF Splitter",    desc: "Split large PDFs into smaller chunks. Great before running OCR.",                 category: "PDF"     },
   { id: "ocr",      path: "/pdf-ocr",          icon: "🔍",  label: "PDF OCR",         desc: "Extract text from scanned PDFs. Output as a text-based PDF. Max 50 pages.",       category: "PDF"     },
   { id: "ascii",    path: "/ascii-art",        icon: "🖼️",  label: "ASCII Art",       desc: "Convert any image into ASCII art. Download as PNG or JPG.",                       category: "Fun"     },
-  { id: "compress", path: "/file-compressor",  icon: "📦",  label: "File Compressor", desc: "Compress images, PDFs, and DOCX files locally — nothing is uploaded to a server.", category: "Utility" },
+  { id: "compress", path: "/file-compressor",  icon: "📦",  label: "File Compressor", desc: "Compress images, PDFs, and DOCX files locally. Nothing is uploaded to a server.", category: "Utility" },
 ];
 
 export const faqItems = [
@@ -26,7 +26,7 @@ export const faqItems = [
   {
     tool: "📄 Doc Q&A",
     q: "What is Doc Q&A?",
-    a: "Upload a PDF — a paper, book, manual, or report — then ask anything about its content. The AI will answer based on the document.",
+    a: "Upload a PDF (a paper, book, manual, or report) then ask anything about its content. The AI will answer based on the document.",
   },
   {
     tool: "🎧 PDF Reader",
@@ -41,7 +41,7 @@ export const faqItems = [
   {
     tool: "🔍 PDF OCR",
     q: "What is PDF OCR?",
-    a: "Upload a scanned PDF and this tool extracts the text using OCR. The result can be downloaded as a text-based PDF, ready for PDF Reader or Doc Q&A. Max 50 pages — use PDF Splitter first for large files.",
+    a: "Upload a scanned PDF and this tool extracts the text using OCR. The result can be downloaded as a text-based PDF, ready for PDF Reader or Doc Q&A. Max 50 pages. Use PDF Splitter first for large files.",
   },
   {
     tool: "🖼️ ASCII Art",
@@ -51,7 +51,7 @@ export const faqItems = [
   {
     tool: "📦 File Compressor",
     q: "What is File Compressor?",
-    a: "Compress images (JPG/PNG/WebP), PDFs, or DOCX files directly in your browser — nothing is uploaded to a server. Images can be reduced by up to 80%.",
+    a: "Compress images (JPG/PNG/WebP), PDFs, or DOCX files directly in your browser. Nothing is uploaded to a server. Images can be reduced by up to 80%.",
   },
 ];
 

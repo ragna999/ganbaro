@@ -347,7 +347,7 @@ export default function AsciiArt() {
         {doneItems.length > 0 && (
           <div>
             <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">
-              Results — {doneItems.length} generated
+              Results ({doneItems.length} generated)
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {doneItems.map((item) => (

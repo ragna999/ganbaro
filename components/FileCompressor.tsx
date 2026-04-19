@@ -199,7 +199,7 @@ export default function FileCompressor() {
       <div className="mb-4 sm:mb-6 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">File Compressor</h2>
         <p className="text-zinc-500 mt-1 text-sm">
-          Compress images, PDFs, or DOCX files directly in your browser — nothing is uploaded to a server.
+          Compress images, PDFs, or DOCX files directly in your browser. Nothing is uploaded to a server.
         </p>
       </div>
 
@@ -405,7 +405,7 @@ export default function FileCompressor() {
             <div className="text-5xl mb-4">📦</div>
             <p className="text-zinc-500 text-sm">Upload a file to start compressing</p>
             <p className="text-zinc-700 text-xs mt-2">
-              Everything happens in your browser — files are never sent to any server
+              Everything happens in your browser. Files are never sent to any server.
             </p>
           </div>
         </div>

@@ -237,7 +237,7 @@ export default function PdfReader() {
                   {docInfo.truncated && " · Truncated to ~250 pages"}
                 </p>
                 {paragraphs.length === 0 && (
-                  <p className="text-xs text-red-400">Could not parse paragraphs — text extracted: {docInfo.text.length} chars</p>
+                  <p className="text-xs text-red-400">Could not parse paragraphs. Text extracted: {docInfo.text.length} chars</p>
                 )}
               </div>
             </div>

@@ -13,7 +13,7 @@ export default function HomePage() {
           Ganbaro
         </h1>
         <p className="text-zinc-400 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-          A collection of open-source AI & utility tools — simple, fast, and free.
+          A collection of open-source AI & utility tools. Simple, fast, and free.
           No sign-up, no ads.
         </p>
         <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
@@ -30,9 +30,9 @@ export default function HomePage() {
       </div>
 
       {/* Tools grid */}
-      <div className="max-w-4xl mx-auto px-6 pb-20">
+      <div className="max-w-4xl mx-auto px-6 pb-12">
         <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-5">
-          Tools — {tools.length} available
+          Tools ({tools.length} available)
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tools.map((tool) => (
@@ -60,6 +60,33 @@ export default function HomePage() {
           ))}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-zinc-800/60 py-8 px-6">
+        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
+          <p>
+            &copy; {new Date().getFullYear()} Ganbaro. Open source and free to use.
+          </p>
+          <div className="flex items-center gap-5">
+            <a
+              href="https://github.com/ragna999/ganbaro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-zinc-400 transition-colors"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://teer.id/gimly"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-yellow-400 transition-colors"
+            >
+              Buy me a coffee ☕
+            </a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

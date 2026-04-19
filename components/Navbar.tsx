@@ -132,7 +132,7 @@ export default function Navbar() {
             </button>
 
             <a
-              href="https://buymeacoffee.com"
+              href="https://teer.id/gimly"
               target="_blank"
               rel="noopener noreferrer"
               className="ml-2 flex items-center gap-2 px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-zinc-900 text-sm font-semibold transition-colors"

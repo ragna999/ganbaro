@@ -190,7 +190,7 @@ export default function DocQA() {
           <div className="min-h-[250px] sm:flex-1 sm:min-h-0 overflow-y-auto mb-4 space-y-4">
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
-                <p className="text-zinc-600 text-sm">Document ready — ask anything about it</p>
+                <p className="text-zinc-600 text-sm">Document ready. Ask anything about it.</p>
               </div>
             )}
             {messages.map((msg, i) => (
