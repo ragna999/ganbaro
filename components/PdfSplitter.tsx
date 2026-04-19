@@ -72,7 +72,7 @@ export default function PdfSplitter() {
       setChunks(result);
     } catch (err) {
       console.error(err);
-      setError(`Gagal: ${(err as Error).message}`);
+      setError(`Failed: ${(err as Error).message}`);
     } finally {
       setProcessing(false);
     }
@@ -102,7 +102,7 @@ export default function PdfSplitter() {
       <div className="mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF Splitter</h2>
         <p className="text-zinc-500 mt-1 text-sm">
-          Pecah PDF besar jadi beberapa bagian. Gunakan sebelum PDF OCR untuk file yang besar.
+          Split large PDFs into smaller chunks. Use before PDF OCR for large files.
         </p>
       </div>
 
@@ -121,19 +121,19 @@ export default function PdfSplitter() {
               <span className="text-2xl">📄</span>
               <div className="text-left flex-1">
                 <p className="text-sm font-medium text-zinc-200">{file.name}</p>
-                <p className="text-xs text-zinc-500">{totalPages} halaman total</p>
+                <p className="text-xs text-zinc-500">{totalPages} pages total</p>
               </div>
               <button
                 onClick={(e) => { e.stopPropagation(); setFile(null); setTotalPages(0); setChunks([]); }}
                 className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
               >
-                Ganti
+                Change
               </button>
             </div>
           ) : (
             <>
               <div className="text-3xl mb-2">✂️</div>
-              <p className="text-zinc-400 text-sm">Drop PDF di sini atau klik untuk browse</p>
+              <p className="text-zinc-400 text-sm">Drop PDF here or click to browse</p>
             </>
           )}
         </div>
@@ -149,9 +149,9 @@ export default function PdfSplitter() {
         {totalPages > 0 && (
           <div className="flex items-center gap-4 bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
             <div className="flex-1">
-              <p className="text-sm font-medium text-zinc-300">Halaman per bagian</p>
+              <p className="text-sm font-medium text-zinc-300">Pages per chunk</p>
               <p className="text-xs text-zinc-600 mt-0.5">
-                → {numChunks} bagian akan dibuat
+                → {numChunks} {numChunks === 1 ? "part" : "parts"} will be created
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -165,7 +165,7 @@ export default function PdfSplitter() {
                 className="w-32 accent-violet-500"
               />
               <span className="text-sm font-mono text-violet-400 w-16 text-right">
-                {pagesPerChunk} hal
+                {pagesPerChunk} pages
               </span>
             </div>
           </div>
@@ -178,7 +178,7 @@ export default function PdfSplitter() {
             disabled={processing}
             className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
           >
-            {processing ? `Memproses… ${progress}%` : `Pecah jadi ${numChunks} bagian`}
+            {processing ? `Processing… ${progress}%` : `Split into ${numChunks} ${numChunks === 1 ? "part" : "parts"}`}
           </button>
         )}
 
@@ -199,12 +199,12 @@ export default function PdfSplitter() {
       {chunks.length > 0 && (
         <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-zinc-300">{chunks.length} bagian siap diunduh</p>
+            <p className="text-sm font-medium text-zinc-300">{chunks.length} {chunks.length === 1 ? "part" : "parts"} ready to download</p>
             <button
               onClick={downloadAll}
               className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
             >
-              Download semua
+              Download all
             </button>
           </div>
           <div className="space-y-2">
@@ -217,10 +217,10 @@ export default function PdfSplitter() {
                   <span className="text-sm">📄</span>
                   <div>
                     <p className="text-sm text-zinc-200">
-                      Bagian {i + 1} dari {chunks.length}
+                      Part {i + 1} of {chunks.length}
                     </p>
                     <p className="text-xs text-zinc-500">
-                      Halaman {chunk.startPage}–{chunk.endPage}
+                      Pages {chunk.startPage}–{chunk.endPage}
                     </p>
                   </div>
                 </div>
@@ -241,8 +241,8 @@ export default function PdfSplitter() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">✂️</div>
-            <p className="text-zinc-500 text-sm">Upload PDF untuk mulai</p>
-            <p className="text-zinc-700 text-xs mt-1">Cocok untuk buku atau dokumen tebal</p>
+            <p className="text-zinc-500 text-sm">Upload a PDF to get started</p>
+            <p className="text-zinc-700 text-xs mt-1">Great for large books or thick documents</p>
           </div>
         </div>
       )}

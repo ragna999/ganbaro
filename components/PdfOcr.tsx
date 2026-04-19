@@ -43,7 +43,7 @@ export default function PdfOcr() {
     if (!file || processing) return;
 
     if (totalPages > 50) {
-      setError(`PDF ini ${totalPages} halaman. Gunakan PDF Splitter dulu (maks 50 halaman untuk OCR).`);
+      setError(`This PDF has ${totalPages} pages. Use PDF Splitter first (max 50 pages for OCR).`);
       return;
     }
 
@@ -53,11 +53,11 @@ export default function PdfOcr() {
     setError("");
 
     try {
-      setStatus("Memuat PDF…");
+      setStatus("Loading PDF…");
       const pdfjs = await import("pdfjs-dist");
       pdfjs.GlobalWorkerOptions.workerSrc = `/pdf.worker.min.mjs`;
 
-      setStatus("Memuat Tesseract OCR engine…");
+      setStatus("Loading Tesseract OCR engine…");
       const { createWorker } = await import("tesseract.js");
       const worker = await createWorker(lang);
 
@@ -68,7 +68,7 @@ export default function PdfOcr() {
 
       for (let i = 1; i <= pdf.numPages; i++) {
         setCurrentPage(i);
-        setStatus(`OCR halaman ${i} dari ${pdf.numPages}…`);
+        setStatus(`OCR page ${i} of ${pdf.numPages}…`);
 
         const page = await pdf.getPage(i);
         const viewport = page.getViewport({ scale: 2 });
@@ -88,7 +88,7 @@ export default function PdfOcr() {
       setStatus("");
     } catch (err) {
       console.error(err);
-      setError("OCR gagal. Pastikan file tidak corrupt dan coba lagi.");
+      setError("OCR failed. Make sure the file isn't corrupt and try again.");
       setStatus("");
     } finally {
       setProcessing(false);
@@ -167,7 +167,7 @@ export default function PdfOcr() {
       <div className="mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF OCR</h2>
         <p className="text-zinc-500 mt-1 text-sm">
-          Ekstrak teks dari PDF scan. Maks 50 halaman — gunakan PDF Splitter untuk file besar.
+          Extract text from scanned PDFs. Max 50 pages — use PDF Splitter for larger files.
         </p>
       </div>
 
@@ -193,9 +193,9 @@ export default function PdfOcr() {
                 <p className={`text-xs ${tooLarge ? "text-red-400" : "text-zinc-500"}`}>
                   {totalPages > 0
                     ? tooLarge
-                      ? `${totalPages} halaman — terlalu besar, split dulu`
-                      : `${totalPages} halaman — siap di-OCR`
-                    : "Memuat info…"}
+                      ? `${totalPages} pages — too large, split first`
+                      : `${totalPages} pages — ready for OCR`
+                    : "Loading info…"}
                 </p>
               </div>
               {!processing && (
@@ -203,15 +203,15 @@ export default function PdfOcr() {
                   onClick={(e) => { e.stopPropagation(); setFile(null); setTotalPages(0); setText(""); setError(""); }}
                   className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
                 >
-                  Ganti
+                  Change
                 </button>
               )}
             </div>
           ) : (
             <>
               <div className="text-3xl mb-2">🔍</div>
-              <p className="text-zinc-400 text-sm">Drop PDF scan di sini atau klik untuk browse</p>
-              <p className="text-zinc-600 text-xs mt-1">Maks 50 halaman</p>
+              <p className="text-zinc-400 text-sm">Drop scanned PDF here or click to browse</p>
+              <p className="text-zinc-600 text-xs mt-1">Max 50 pages</p>
             </>
           )}
         </div>
@@ -241,7 +241,7 @@ export default function PdfOcr() {
               disabled={processing}
               className="flex-1 py-2.5 rounded-lg bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
             >
-              {processing ? "Memproses…" : "Mulai OCR"}
+              {processing ? "Processing…" : "Start OCR"}
             </button>
           </div>
         )}
@@ -263,7 +263,7 @@ export default function PdfOcr() {
             />
           </div>
           <p className="text-xs text-zinc-700">
-            Proses ini berjalan di browser, butuh beberapa menit tergantung kompleksitas halaman.
+            Running in your browser — may take a few minutes depending on page complexity.
           </p>
         </div>
       )}
@@ -273,7 +273,7 @@ export default function PdfOcr() {
         <div className="flex-1 min-h-0 flex flex-col">
           <div className="flex items-center justify-between mb-3 shrink-0">
             <p className="text-sm font-medium text-zinc-300">
-              Teks berhasil diekstrak ✓
+              Text extracted successfully ✓
             </p>
             <div className="flex gap-2">
               <button
@@ -307,8 +307,8 @@ export default function PdfOcr() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">🔍</div>
-            <p className="text-zinc-500 text-sm">Upload PDF scan untuk ekstrak teks</p>
-            <p className="text-zinc-700 text-xs mt-1">Kualitas OCR terbaik dengan scan yang jelas</p>
+            <p className="text-zinc-500 text-sm">Upload a scanned PDF to extract text</p>
+            <p className="text-zinc-700 text-xs mt-1">Best results with clear, high-resolution scans</p>
           </div>
         </div>
       )}

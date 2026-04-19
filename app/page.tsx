@@ -24,38 +24,38 @@ const tools: { id: Tool; icon: string; label: string; desc: string; category: st
 const faqItems = [
   {
     tool: "⚡ Repo Explainer",
-    q: "Apa itu Repo Explainer?",
-    a: "Paste URL repo GitHub mana saja, dan AI akan menjelaskan arsitektur, tech stack, cara kerja, dan insight menarik dari kodebase tersebut. Cocok untuk developer yang ingin memahami project baru dengan cepat.",
+    q: "What is Repo Explainer?",
+    a: "Paste any public GitHub repo URL and AI will explain its architecture, tech stack, how it works, and key insights from the codebase. Perfect for developers who want to quickly understand a new project.",
   },
   {
     tool: "📄 Doc Q&A",
-    a: "Upload file PDF — bisa paper, buku, manual, laporan — lalu tanya apa saja tentang isinya. AI akan menjawab berdasarkan konten dokumen.",
-    q: "Apa itu Doc Q&A?",
+    q: "What is Doc Q&A?",
+    a: "Upload a PDF — a paper, book, manual, or report — then ask anything about its content. The AI will answer based on the document.",
   },
   {
     tool: "🎧 PDF Reader",
-    q: "Apa itu PDF Reader?",
-    a: "Upload PDF teks, dan browser akan membacakannya keras-keras. Bisa atur kecepatan, pilih suara, dan lompat ke paragraf manapun. Ideal untuk belajar sambil melakukan hal lain.",
+    q: "What is PDF Reader?",
+    a: "Upload a text-based PDF and your browser will read it aloud. Adjust speed, choose a voice, and jump to any paragraph. Ideal for learning while doing something else.",
   },
   {
     tool: "✂️ PDF Splitter",
-    q: "Apa itu PDF Splitter?",
-    a: "Pecah PDF besar menjadi beberapa bagian dengan jumlah halaman yang bisa kamu tentukan. Berguna sebelum menggunakan PDF OCR yang punya batas 50 halaman.",
+    q: "What is PDF Splitter?",
+    a: "Split large PDFs into smaller parts with a page count you choose. Useful before using PDF OCR, which has a 50-page limit.",
   },
   {
     tool: "🔍 PDF OCR",
-    q: "Apa itu PDF OCR?",
-    a: "Upload PDF hasil scan (foto halaman buku/dokumen), dan tool ini akan mengekstrak teksnya menggunakan OCR. Hasilnya bisa didownload sebagai PDF teks yang bisa digunakan di PDF Reader atau Doc Q&A. Maks 50 halaman — gunakan PDF Splitter terlebih dahulu untuk file besar.",
+    q: "What is PDF OCR?",
+    a: "Upload a scanned PDF (photos of book/document pages) and this tool extracts the text using OCR. The result can be downloaded as a text-based PDF, ready for PDF Reader or Doc Q&A. Max 50 pages — use PDF Splitter first for large files.",
   },
   {
     tool: "🖼️ ASCII Art",
-    q: "Apa itu ASCII Art?",
-    a: "Upload gambar apa saja dan konversi menjadi ASCII art menggunakan karakter teks. Bisa pilih character set, atur lebar, invert warna, dan download hasilnya sebagai PNG atau JPG.",
+    q: "What is ASCII Art?",
+    a: "Upload any image and convert it into ASCII art using text characters. Choose a character set, adjust width, invert brightness, and download the result as PNG or JPG.",
   },
   {
     tool: "📦 File Compressor",
-    q: "Apa itu File Compressor?",
-    a: "Kompres gambar (JPG/PNG/WebP), PDF, atau DOCX langsung di browser — tanpa upload ke server. Cocok untuk mahasiswa yang perlu mengecilkan ukuran file sebelum upload ke portal kampus. Gambar bisa dihemat hingga 80%.",
+    q: "What is File Compressor?",
+    a: "Compress images (JPG/PNG/WebP), PDFs, or DOCX files directly in your browser — nothing is uploaded to a server. Images can be reduced by up to 80%.",
   },
 ];
 
@@ -132,7 +132,7 @@ function FaqModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-zinc-100">FAQ</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Penjelasan singkat tiap tool di Ganbaro</p>
+            <p className="text-xs text-zinc-500 mt-0.5">A quick overview of each tool in Ganbaro</p>
           </div>
           <button
             onClick={onClose}
@@ -174,8 +174,8 @@ function HomePage({ onSelect }: { onSelect: (t: Tool) => void }) {
           Ganbaro
         </h1>
         <p className="text-zinc-400 text-lg max-w-xl mx-auto leading-relaxed">
-          Kumpulan tools open-source berbasis AI & utility yang simpel, cepat, dan gratis.
-          Tidak perlu sign-up, tidak ada iklan.
+          A collection of open-source AI & utility tools — simple, fast, and free.
+          No sign-up, no ads.
         </p>
         <div className="flex items-center justify-center gap-3 mt-6 flex-wrap">
           <span className="text-xs bg-zinc-800 text-zinc-500 border border-zinc-700 px-3 py-1.5 rounded-full">
@@ -193,7 +193,7 @@ function HomePage({ onSelect }: { onSelect: (t: Tool) => void }) {
       {/* Tools grid */}
       <div className="max-w-4xl mx-auto px-6 pb-20">
         <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-5">
-          Tools — {tools.length} tersedia
+          Tools — {tools.length} available
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {tools.map((tool) => (

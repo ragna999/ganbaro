@@ -44,7 +44,7 @@ export default function FileCompressor() {
   function handleFile(f: File) {
     const type = detectType(f);
     if (!type) {
-      setError("Format tidak didukung. Upload JPG/PNG/WebP, PDF, atau DOCX.");
+      setError("Unsupported format. Upload JPG/PNG/WebP, PDF, or DOCX.");
       return;
     }
     setFile(f);
@@ -175,7 +175,7 @@ export default function FileCompressor() {
       });
     } catch (err) {
       console.error(err);
-      setError("Kompresi gagal. File mungkin corrupt atau tidak didukung.");
+      setError("Compression failed. The file may be corrupt or unsupported.");
     } finally {
       setProcessing(false);
     }
@@ -199,7 +199,7 @@ export default function FileCompressor() {
       <div className="mb-6 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">File Compressor</h2>
         <p className="text-zinc-500 mt-1 text-sm">
-          Kompres gambar, PDF, atau DOCX langsung di browser — tanpa upload ke server.
+          Compress images, PDFs, or DOCX files directly in your browser — nothing is uploaded to a server.
         </p>
       </div>
 
@@ -229,13 +229,13 @@ export default function FileCompressor() {
                 onClick={(e) => { e.stopPropagation(); setFile(null); setFileType(null); setResult(null); }}
                 className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
               >
-                Ganti
+                Change
               </button>
             </div>
           ) : (
             <>
               <div className="text-3xl mb-2">📦</div>
-              <p className="text-zinc-400 text-sm">Drop file di sini atau klik untuk browse</p>
+              <p className="text-zinc-400 text-sm">Drop file here or click to browse</p>
               <p className="text-zinc-600 text-xs mt-1">JPG · PNG · WebP · PDF · DOCX</p>
             </>
           )}
@@ -257,7 +257,7 @@ export default function FileCompressor() {
               <div>
                 <div className="flex justify-between mb-1.5">
                   <p className="text-xs font-medium text-zinc-400">
-                    {fileType === "docx" ? "Kualitas gambar di dalam file" : "Kualitas"}
+                    {fileType === "docx" ? "Image quality inside document" : "Quality"}
                   </p>
                   <span className="text-xs font-mono text-violet-400">{quality}%</span>
                 </div>
@@ -268,8 +268,8 @@ export default function FileCompressor() {
                   className="w-full accent-violet-500"
                 />
                 <div className="flex justify-between text-xs text-zinc-600 mt-0.5">
-                  <span>Lebih kecil</span>
-                  <span>Lebih bagus</span>
+                  <span>Smaller</span>
+                  <span>Better quality</span>
                 </div>
               </div>
             )}
@@ -311,7 +311,7 @@ export default function FileCompressor() {
                       onChange={(e) => setResizeEnabled(e.target.checked)}
                       className="accent-violet-500"
                     />
-                    <span className="text-xs font-medium text-zinc-400">Resize (max lebar)</span>
+                    <span className="text-xs font-medium text-zinc-400">Resize (max width)</span>
                   </label>
                   {resizeEnabled && (
                     <div className="flex items-center gap-3">
@@ -333,8 +333,8 @@ export default function FileCompressor() {
             {/* PDF info */}
             {fileType === "pdf" && (
               <p className="text-xs text-zinc-500">
-                PDF akan di-optimize dan di-save ulang. Teks tetap selectable.
-                Hasil terbaik untuk PDF dengan banyak metadata atau gambar embedded.
+                The PDF will be re-optimized and saved. Text remains selectable.
+                Works best for PDFs with lots of metadata or embedded images.
               </p>
             )}
           </div>
@@ -347,7 +347,7 @@ export default function FileCompressor() {
             disabled={processing}
             className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm transition-colors"
           >
-            {processing ? "Mengompres…" : "Kompres Sekarang"}
+            {processing ? "Compressing…" : "Compress Now"}
           </button>
         )}
 
@@ -360,17 +360,17 @@ export default function FileCompressor() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Sebelum</p>
+              <p className="text-xs text-zinc-500 mb-1">Before</p>
               <p className="text-sm font-semibold text-zinc-300">{formatSize(result.originalSize)}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Hemat</p>
+              <p className="text-xs text-zinc-500 mb-1">Saved</p>
               <p className={`text-lg font-bold ${savings > 0 ? "text-green-400" : "text-zinc-400"}`}>
                 {savings > 0 ? `-${savings}%` : "~0%"}
               </p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Sesudah</p>
+              <p className="text-xs text-zinc-500 mb-1">After</p>
               <p className="text-sm font-semibold text-zinc-300">{formatSize(result.compressedSize)}</p>
             </div>
           </div>
@@ -385,7 +385,7 @@ export default function FileCompressor() {
 
           {savings <= 0 && (
             <p className="text-xs text-zinc-500 text-center">
-              File sudah optimal atau format tidak mendukung kompresi lebih lanjut.
+              File is already optimal or the format doesn&apos;t support further compression.
             </p>
           )}
 
@@ -403,9 +403,9 @@ export default function FileCompressor() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">📦</div>
-            <p className="text-zinc-500 text-sm">Upload file untuk mulai kompres</p>
+            <p className="text-zinc-500 text-sm">Upload a file to start compressing</p>
             <p className="text-zinc-700 text-xs mt-2">
-              Semua proses terjadi di browser kamu — file tidak dikirim ke server manapun
+              Everything happens in your browser — files are never sent to any server
             </p>
           </div>
         </div>
