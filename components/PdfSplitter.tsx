@@ -97,7 +97,7 @@ export default function PdfSplitter() {
   const numChunks = totalPages ? Math.ceil(totalPages / pagesPerChunk) : 0;
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
+    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
       {/* Header */}
       <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF Splitter</h2>
@@ -197,7 +197,7 @@ export default function PdfSplitter() {
 
       {/* Results */}
       {chunks.length > 0 && (
-        <div className="flex-1 min-h-0 overflow-y-auto">
+        <div className="min-h-[200px] sm:flex-1 sm:min-h-0 overflow-y-auto">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium text-zinc-300">{chunks.length} {chunks.length === 1 ? "part" : "parts"} ready to download</p>
             <button
@@ -238,7 +238,7 @@ export default function PdfSplitter() {
 
       {/* Empty state */}
       {!file && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="py-16 sm:flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">✂️</div>
             <p className="text-zinc-500 text-sm">Upload a PDF to get started</p>
@@ -246,6 +246,6 @@ export default function PdfSplitter() {
           </div>
         </div>
       )}
-    </div>
+    </div></div>
   );
 }

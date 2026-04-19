@@ -162,7 +162,7 @@ export default function PdfOcr() {
   const tooLarge = totalPages > 50;
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-8">
+    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
       {/* Header */}
       <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF OCR</h2>
@@ -270,7 +270,7 @@ export default function PdfOcr() {
 
       {/* Text output */}
       {text && !processing && (
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="min-h-[200px] sm:flex-1 sm:min-h-0 flex flex-col">
           <div className="flex items-center justify-between mb-3 shrink-0">
             <p className="text-sm font-medium text-zinc-300">
               Text extracted successfully ✓
@@ -304,7 +304,7 @@ export default function PdfOcr() {
 
       {/* Empty state */}
       {!file && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="py-16 sm:flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">🔍</div>
             <p className="text-zinc-500 text-sm">Upload a scanned PDF to extract text</p>
@@ -312,6 +312,6 @@ export default function PdfOcr() {
           </div>
         </div>
       )}
-    </div>
+    </div></div>
   );
 }

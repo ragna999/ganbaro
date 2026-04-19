@@ -122,7 +122,7 @@ export default function DocQA() {
   }
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-8">
+    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
       {/* Header */}
       <div className="mb-4 sm:mb-5 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">Doc Q&A</h2>
@@ -187,7 +187,7 @@ export default function DocQA() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto mb-4 min-h-0 space-y-4">
+          <div className="min-h-[250px] sm:flex-1 sm:min-h-0 overflow-y-auto mb-4 space-y-4">
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full">
                 <p className="text-zinc-600 text-sm">Document ready — ask anything about it</p>
@@ -258,6 +258,6 @@ export default function DocQA() {
           </div>
         </>
       )}
-    </div>
+    </div></div>
   );
 }

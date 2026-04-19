@@ -182,7 +182,7 @@ export default function PdfReader() {
   }
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-8">
+    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
       {/* Header */}
       <div className="mb-4 sm:mb-5 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF Reader</h2>
@@ -250,7 +250,7 @@ export default function PdfReader() {
           </div>
 
           {/* Text display */}
-          <div className="flex-1 overflow-y-auto mb-4 min-h-0 bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-3">
+          <div className="min-h-[250px] sm:flex-1 sm:min-h-0 overflow-y-auto mb-4 bg-zinc-900/50 border border-zinc-800 rounded-xl p-5 space-y-3">
             {paragraphs.map((para, i) => (
               <p
                 key={i}
@@ -353,6 +353,6 @@ export default function PdfReader() {
           </div>
         </>
       )}
-    </div>
+    </div></div>
   );
 }

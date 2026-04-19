@@ -194,7 +194,7 @@ export default function FileCompressor() {
     : 0;
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
+    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
       {/* Header */}
       <div className="mb-4 sm:mb-6 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">File Compressor</h2>
@@ -400,7 +400,7 @@ export default function FileCompressor() {
 
       {/* Empty state */}
       {!file && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="py-16 sm:flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">📦</div>
             <p className="text-zinc-500 text-sm">Upload a file to start compressing</p>
@@ -410,6 +410,6 @@ export default function FileCompressor() {
           </div>
         </div>
       )}
-    </div>
+    </div></div>
   );
 }

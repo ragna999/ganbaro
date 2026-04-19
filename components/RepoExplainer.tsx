@@ -101,7 +101,7 @@ export default function RepoExplainer() {
   }
 
   return (
-    <div className="h-full flex flex-col p-4 sm:p-8 overflow-y-auto">
+    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
       {/* Header */}
       <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">Repo Explainer</h2>
@@ -150,7 +150,7 @@ export default function RepoExplainer() {
 
       {/* Output */}
       {(output || loading) && (
-        <div className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 overflow-y-auto">
+        <div className="min-h-[200px] sm:flex-1 bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 overflow-y-auto">
           {output ? (
             <div className="prose-dark">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{output}</ReactMarkdown>
@@ -237,7 +237,7 @@ export default function RepoExplainer() {
 
       {/* Empty state */}
       {!output && !loading && !error && (
-        <div className="flex-1 flex items-center justify-center">
+        <div className="py-16 sm:flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="text-5xl mb-4">⚡</div>
             <p className="text-zinc-500 text-sm">Enter a GitHub URL above to get started</p>
@@ -245,6 +245,6 @@ export default function RepoExplainer() {
           </div>
         </div>
       )}
-    </div>
+    </div></div>
   );
 }
