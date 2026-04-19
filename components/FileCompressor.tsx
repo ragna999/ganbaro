@@ -141,7 +141,7 @@ export default function FileCompressor() {
       compression: "DEFLATE",
       compressionOptions: { level: 9 },
     });
-    return new Blob([bytes], {
+    return new Blob([bytes.buffer as ArrayBuffer], {
       type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     });
   }
