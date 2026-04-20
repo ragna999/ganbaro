@@ -103,7 +103,9 @@ export default function VideoClipper() {
         videoRef.current.currentTime = clips[0].start;
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+      const msg = e instanceof Error ? e.message : "Something went wrong. Please try again.";
+      console.error("VideoClipper error:", msg);
+      setError(msg);
       setPhase("upload");
     }
   }

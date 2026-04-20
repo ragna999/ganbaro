@@ -21,15 +21,21 @@ export async function POST(req: NextRequest) {
   const audio = formData.get("audio") as File | null;
   if (!audio) return NextResponse.json({ error: "No audio file provided." }, { status: 400 });
 
-  const transcription = await groq.audio.transcriptions.create({
-    file: audio,
-    model: "whisper-large-v3-turbo",
-    response_format: "verbose_json",
-    timestamp_granularities: ["segment"],
-  });
+  try {
+    const transcription = await groq.audio.transcriptions.create({
+      file: audio,
+      model: "whisper-large-v3-turbo",
+      response_format: "verbose_json",
+      timestamp_granularities: ["segment"],
+    });
 
-  return NextResponse.json({
-    text: transcription.text,
-    segments: (transcription as unknown as { segments?: { start: number; end: number; text: string }[] }).segments ?? [],
-  });
+    return NextResponse.json({
+      text: transcription.text,
+      segments: (transcription as unknown as { segments?: { start: number; end: number; text: string }[] }).segments ?? [],
+    });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Transcription failed.";
+    console.error("Groq transcription error:", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
 }
