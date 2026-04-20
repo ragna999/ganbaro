@@ -385,7 +385,7 @@ export default function PaperFinder() {
             <h1 className="text-2xl font-bold text-white">Paper Finder</h1>
           </div>
           <p className="text-zinc-500 text-sm leading-relaxed">
-            Search millions of academic papers via Semantic Scholar. Get AI-powered explanations of any paper.
+            Search millions of academic papers via OpenAlex. Get AI-powered explanations of any paper.
           </p>
         </div>
 
@@ -480,7 +480,7 @@ export default function PaperFinder() {
           <div className="text-center py-16 text-zinc-700">
             <p className="text-5xl mb-4">📚</p>
             <p className="text-sm">Search for any academic topic to get started.</p>
-            <p className="text-xs mt-2 text-zinc-700">Powered by Semantic Scholar — 200M+ papers indexed</p>
+            <p className="text-xs mt-2 text-zinc-700">Powered by OpenAlex — 200M+ papers indexed</p>
           </div>
         )}
       </div>
