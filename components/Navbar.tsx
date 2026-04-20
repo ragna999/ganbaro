@@ -39,7 +39,7 @@ function ToolsDropdown() {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50">
+        <div className="absolute top-full right-0 mt-2 w-64 max-w-[calc(100vw-1rem)] bg-zinc-900 border border-zinc-800 rounded-xl shadow-xl overflow-hidden z-50">
           <div className="p-1.5">
             {tools.map((tool) => (
               <button
