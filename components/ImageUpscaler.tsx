@@ -60,7 +60,8 @@ export default function ImageUpscaler() {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { default: Upscaler } = await (import("upscalerjs") as Promise<any>);
+      const upscalerMod = await (import("upscaler") as Promise<any>);
+      const Upscaler = upscalerMod.default ?? upscalerMod;
       const { default: model } = scale === 4
         ? await import("@upscalerjs/esrgan-slim/4x")
         : await import("@upscalerjs/esrgan-slim/2x");
