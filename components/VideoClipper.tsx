@@ -77,12 +77,12 @@ export default function VideoClipper() {
       const ret = await ffmpeg.exec([
         "-i", inputName,
         "-vn", "-ar", "16000", "-ac", "1",
-        "-c:a", "pcm_s16le",
-        "audio.wav",
+        "-c:a", "libmp3lame", "-b:a", "16k",
+        "audio.mp3",
       ]);
       if (ret !== 0) throw new Error(`ffmpeg audio extraction failed (exit ${ret})`);
-      const audioData = await ffmpeg.readFile("audio.wav");
-      audioBlob = new Blob([(audioData as Uint8Array).buffer as ArrayBuffer], { type: "audio/wav" });
+      const audioData = await ffmpeg.readFile("audio.mp3");
+      audioBlob = new Blob([(audioData as Uint8Array).buffer as ArrayBuffer], { type: "audio/mp3" });
     } catch (e) {
       setError(`Audio extraction failed: ${toMsg(e)}`);
       setPhase("upload");
@@ -94,8 +94,12 @@ export default function VideoClipper() {
     let segments: { start: number; end: number; text: string }[];
     try {
       const fd = new FormData();
-      fd.append("audio", new File([audioBlob], "audio.wav", { type: "audio/wav" }));
+      fd.append("audio", new File([audioBlob], "audio.mp3", { type: "audio/mp3" }));
       const res = await fetch("/api/transcribe", { method: "POST", body: fd });
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        throw new Error(`Server error ${res.status}: ${await res.text()}`);
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Transcription failed.");
       if (!data.segments || data.segments.length === 0) throw new Error("No speech detected in this video.");
@@ -197,13 +201,6 @@ export default function VideoClipper() {
         </p>
       </div>
 
-      {/* Setup note */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 mb-6 text-xs text-zinc-500 leading-relaxed">
-        <span className="text-zinc-400 font-medium">Setup required:</span> This tool needs a free{" "}
-        <span className="text-violet-400 font-mono">GROQ_API_KEY</span> in{" "}
-        <span className="font-mono">.env.local</span> for speech transcription.{" "}
-        Get one free at <span className="text-zinc-400">console.groq.com</span> — 7,200 min/day free.
-      </div>
 
       {/* Error */}
       {error && (
