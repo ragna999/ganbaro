@@ -53,26 +53,23 @@ export default function ImageUpscaler() {
     setResultSize(null);
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const PicaMod = await (import("pica") as Promise<any>);
-      const Pica = PicaMod.default ?? PicaMod;
-      const pica = new Pica();
+      const canvas = document.createElement("canvas");
+      canvas.width = origSize.w * scale;
+      canvas.height = origSize.h * scale;
+      const ctx = canvas.getContext("2d")!;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(imgRef.current, 0, 0, canvas.width, canvas.height);
 
-      const src = document.createElement("canvas");
-      src.width = origSize.w;
-      src.height = origSize.h;
-      src.getContext("2d")!.drawImage(imgRef.current, 0, 0);
-
-      const dst = document.createElement("canvas");
-      dst.width = origSize.w * scale;
-      dst.height = origSize.h * scale;
-
-      await pica.resize(src, dst, { quality: 3, alpha: true });
-      const blob = await pica.toBlob(dst, "image/png");
-
-      setResult(URL.createObjectURL(blob));
-      setResultSize({ w: dst.width, h: dst.height });
-      setStatus("done");
+      await new Promise<void>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (!blob) { reject(new Error("Failed to export canvas")); return; }
+          setResult(URL.createObjectURL(blob));
+          setResultSize({ w: canvas.width, h: canvas.height });
+          setStatus("done");
+          resolve();
+        }, "image/png");
+      });
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Upscaling failed. Please try again.");
       setStatus("error");
@@ -216,9 +213,12 @@ export default function ImageUpscaler() {
           </div>
 
           {resultSize && origSize && (
-            <p className="text-xs text-zinc-600 text-center">
-              {origSize.w}×{origSize.h}px → <span className="text-zinc-400">{resultSize.w}×{resultSize.h}px</span>
-            </p>
+            <div className="text-center">
+              <p className="text-xs text-zinc-500">
+                {origSize.w}×{origSize.h}px → <span className="text-zinc-300 font-medium">{resultSize.w}×{resultSize.h}px</span>
+              </p>
+              <p className="text-xs text-zinc-600 mt-0.5">Preview is scaled to fit — download to see the full {scale}× resolution.</p>
+            </div>
           )}
 
           <div className="flex gap-3">
