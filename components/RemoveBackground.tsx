@@ -12,6 +12,8 @@ export default function RemoveBackground() {
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
 
   const abortRef = useRef<AbortController | null>(null);
 
@@ -34,6 +36,8 @@ export default function RemoveBackground() {
     abortRef.current = abort;
 
     setStatus("loading-model");
+    setProgress(0);
+    setProgressLabel("");
 
     try {
       const { removeBackground } = await import("@imgly/background-removal");
@@ -41,7 +45,17 @@ export default function RemoveBackground() {
       if (abort.signal.aborted) return;
       setStatus("processing");
 
-      const blob = await removeBackground(file, { model: "isnet" });
+      const blob = await removeBackground(file, {
+        model: "isnet",
+        progress: (key: string, current: number, total: number) => {
+          if (abort.signal.aborted) return;
+          const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+          setProgress(pct);
+          if (key.includes("fetch")) setProgressLabel("Downloading model…");
+          else if (key.includes("compute")) setProgressLabel("Removing background…");
+          else setProgressLabel("Processing…");
+        },
+      });
 
       if (abort.signal.aborted) return;
       setResult(URL.createObjectURL(blob));
@@ -113,7 +127,7 @@ export default function RemoveBackground() {
 
       {/* Processing state */}
       {busy && (
-        <div className="flex flex-col items-center gap-5 py-16">
+        <div className="flex flex-col items-center gap-6 py-12">
           {original && (
             <div className="relative w-48 h-48 rounded-xl overflow-hidden border border-zinc-800">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -123,13 +137,20 @@ export default function RemoveBackground() {
               </div>
             </div>
           )}
-          <div className="text-center">
-            <p className="text-sm font-medium text-zinc-200">
-              {status === "loading-model" ? "Loading AI model…" : "Removing background…"}
-            </p>
-            <p className="text-xs text-zinc-600 mt-1">
-              {status === "loading-model" ? "First run downloads ~50MB model" : "This may take a few seconds"}
-            </p>
+          <div className="w-full max-w-sm flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs text-zinc-400">
+              <span>{progressLabel || (status === "loading-model" ? "Loading AI model…" : "Removing background…")}</span>
+              <span className="font-mono tabular-nums">{progress}%</span>
+            </div>
+            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-violet-500 rounded-full transition-all duration-200"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            {status === "loading-model" && progress === 0 && (
+              <p className="text-xs text-zinc-600">First run downloads ~50MB model</p>
+            )}
           </div>
         </div>
       )}
