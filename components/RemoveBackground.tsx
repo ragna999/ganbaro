@@ -41,7 +41,7 @@ export default function RemoveBackground() {
       if (abort.signal.aborted) return;
       setStatus("processing");
 
-      const blob = await removeBackground(file);
+      const blob = await removeBackground(file, { model: "isnet" });
 
       if (abort.signal.aborted) return;
       setResult(URL.createObjectURL(blob));
