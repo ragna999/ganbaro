@@ -43,32 +43,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <div className="flex flex-col h-screen bg-zinc-950 text-zinc-100">
           <Navbar />
-          <main className="flex-1 overflow-hidden">
-            {children}
-          </main>
-          <footer className="shrink-0 border-t border-zinc-800/60 py-8 px-6">
-            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
-              <p>&copy; {new Date().getFullYear()} Ganbaro. Open source and free to use.</p>
-              <div className="flex items-center gap-5">
-                <a
-                  href="https://github.com/ragna999/ganbaro"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-zinc-400 transition-colors"
-                >
-                  GitHub
-                </a>
-                <a
-                  href="https://teer.id/gimly"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-yellow-400 transition-colors"
-                >
-                  Buy me a coffee ☕
-                </a>
+          <div className="flex-1 overflow-y-auto">
+            <main>{children}</main>
+            <footer className="border-t border-zinc-800/60 py-8 px-6">
+              <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-600">
+                <p>&copy; {new Date().getFullYear()} Ganbaro. Open source and free to use.</p>
+                <div className="flex items-center gap-5">
+                  <a
+                    href="https://github.com/ragna999/ganbaro"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-zinc-400 transition-colors"
+                  >
+                    GitHub
+                  </a>
+                  <a
+                    href="https://teer.id/gimly"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-yellow-400 transition-colors"
+                  >
+                    Buy me a coffee ☕
+                  </a>
+                </div>
               </div>
-            </div>
-          </footer>
+            </footer>
+          </div>
         </div>
       </body>
     </html>

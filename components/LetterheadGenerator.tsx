@@ -259,7 +259,7 @@ export default function LetterheadGenerator() {
   const { r, g, b } = hexToRgb(form.color);
 
   return (
-    <div className="h-full overflow-y-auto">
+    
       <div className="flex flex-col lg:flex-row gap-6 p-4 sm:p-8">
 
         {/* ── Left: Form ── */}
@@ -448,6 +448,5 @@ export default function LetterheadGenerator() {
         </div>
 
       </div>
-    </div>
   );
 }

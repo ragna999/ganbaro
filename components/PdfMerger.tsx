@@ -102,7 +102,7 @@ export default function PdfMerger() {
   const totalPages = items.reduce((sum, i) => sum + (i.pages && i.pages > 0 ? i.pages : 0), 0);
 
   return (
-    <div className="h-full overflow-y-auto">
+    
       <div className="flex flex-col p-4 sm:p-8">
         {/* Header */}
         <div className="mb-5 shrink-0">
@@ -228,6 +228,5 @@ export default function PdfMerger() {
           </div>
         )}
       </div>
-    </div>
   );
 }

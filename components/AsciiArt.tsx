@@ -190,7 +190,7 @@ export default function AsciiArt() {
   const progress    = totalReady ? Math.round((doneCount / totalReady) * 100) : 0;
 
   return (
-    <div className="h-full overflow-y-auto">
+    
       <div className="p-4 sm:p-8 space-y-5">
 
         {/* Header */}
@@ -391,6 +391,5 @@ export default function AsciiArt() {
         )}
 
       </div>
-    </div>
   );
 }

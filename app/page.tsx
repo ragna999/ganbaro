@@ -5,7 +5,7 @@ import { tools, categoryColor } from "@/lib/tools";
 
 export default function HomePage() {
   return (
-    <div className="h-full overflow-y-auto">
+    <div>
       {/* Hero */}
       <div className="text-center px-4 sm:px-6 pt-10 sm:pt-20 pb-8 sm:pb-14">
         <div className="text-6xl mb-5">🔥</div>

@@ -97,7 +97,7 @@ export default function PdfSplitter() {
   const numChunks = totalPages ? Math.ceil(totalPages / pagesPerChunk) : 0;
 
   return (
-    <div className="h-full overflow-y-auto"><div className="flex flex-col p-4 sm:p-8 sm:h-full">
+    <div className="flex flex-col p-4 sm:p-8 sm:min-h-[calc(100vh-3.5rem)]">
       {/* Header */}
       <div className="mb-4 sm:mb-7 shrink-0">
         <h2 className="text-2xl font-bold text-zinc-100">PDF Splitter</h2>
@@ -246,6 +246,6 @@ export default function PdfSplitter() {
           </div>
         </div>
       )}
-    </div></div>
+    </div>
   );
 }

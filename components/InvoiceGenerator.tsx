@@ -261,7 +261,7 @@ export default function InvoiceGenerator() {
   const labelCls = "block text-xs font-medium text-zinc-400 mb-1.5";
 
   return (
-    <div className="h-full overflow-y-auto">
+    
       <div className="flex flex-col p-4 sm:p-8 gap-6">
         {/* Header */}
         <div className="shrink-0">
@@ -404,6 +404,5 @@ export default function InvoiceGenerator() {
           {processing ? "Generating PDF…" : "Download Invoice PDF"}
         </button>
       </div>
-    </div>
   );
 }

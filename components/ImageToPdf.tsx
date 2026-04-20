@@ -146,7 +146,7 @@ export default function ImageToPdf() {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    
       <div className="flex flex-col p-4 sm:p-8">
         {/* Header */}
         <div className="mb-5 shrink-0">
@@ -296,6 +296,5 @@ export default function ImageToPdf() {
           </div>
         )}
       </div>
-    </div>
   );
 }
