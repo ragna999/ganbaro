@@ -23,6 +23,7 @@ export const tools: Tool[] = [
   { id: "papers",    path: "/paper-finder",         icon: "🔬", label: "Paper Finder",         desc: "Search 200M+ academic papers via OpenAlex. Get AI explanations of any paper.", category: "AI"      },
   { id: "qr",        path: "/qr-generator",         icon: "🔗", label: "QR Code Generator",    desc: "Generate QR codes from any URL or text. Customize colors and size. Download as PNG.", category: "Utility" },
   { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI"      },
+  { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility" },
 ];
 
 export const faqItems = [
@@ -85,6 +86,11 @@ export const faqItems = [
     tool: "📋 Letterhead Generator",
     q: "What is Letterhead Generator?",
     a: "Create a professional company letterhead with your company name, tagline, logo, contact info, and brand color. Choose from three layout styles (Classic, Corporate, Minimal) and download as a PDF ready to use in Word or as a template.",
+  },
+  {
+    tool: "🎞️ Video Splitter",
+    q: "What is Video Splitter?",
+    a: "Upload a video and split it into smaller chunks by duration — 5, 10, 15, 20, or 30-minute parts. Each part downloads automatically. Runs entirely in your browser using ffmpeg.wasm, nothing is uploaded to a server. Great for splitting long videos before using Video Clipper.",
   },
   {
     tool: "🎬 Video Clipper",
