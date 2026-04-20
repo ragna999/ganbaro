@@ -41,9 +41,7 @@ export default function RemoveBackground() {
       if (abort.signal.aborted) return;
       setStatus("processing");
 
-      const blob = await removeBackground(file, {
-        publicPath: "https://unpkg.com/@imgly/background-removal@1.4.5/dist/",
-      });
+      const blob = await removeBackground(file);
 
       if (abort.signal.aborted) return;
       setResult(URL.createObjectURL(blob));
