@@ -4,6 +4,18 @@ import { useState, useRef } from "react";
 import type { Paper } from "@/app/api/paper-search/route";
 
 type ExplainState = "idle" | "loading" | "streaming" | "done" | "error";
+type TranslateState = "idle" | "loading" | "streaming" | "done" | "error";
+
+const LANGUAGES = [
+  { label: "Indonesian", value: "Indonesian" },
+  { label: "Spanish", value: "Spanish" },
+  { label: "French", value: "French" },
+  { label: "German", value: "German" },
+  { label: "Japanese", value: "Japanese" },
+  { label: "Chinese (Simplified)", value: "Chinese (Simplified)" },
+  { label: "Arabic", value: "Arabic" },
+  { label: "Portuguese", value: "Portuguese" },
+];
 
 interface PaperCardProps {
   paper: Paper;
@@ -13,7 +25,11 @@ function PaperCard({ paper }: PaperCardProps) {
   const [explainState, setExplainState] = useState<ExplainState>("idle");
   const [explanation, setExplanation] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [translateState, setTranslateState] = useState<TranslateState>("idle");
+  const [translated, setTranslated] = useState("");
+  const [targetLang, setTargetLang] = useState("Indonesian");
   const abortRef = useRef<AbortController | null>(null);
+  const translateAbortRef = useRef<AbortController | null>(null);
 
   const doi = paper.externalIds?.DOI;
   const arxiv = paper.externalIds?.ArXiv;
@@ -63,13 +79,63 @@ function PaperCard({ paper }: PaperCardProps) {
         setExplanation((prev) => prev + decoder.decode(value, { stream: true }));
       }
 
-      setExplainState("done");
+        setExplainState("done");
+      setTranslateState("idle");
+      setTranslated("");
     } catch (e: unknown) {
       if (e instanceof Error && e.name === "AbortError") {
         setExplainState("idle");
       } else {
         setExplanation("Something went wrong. Please try again.");
         setExplainState("error");
+      }
+    }
+  }
+
+  async function handleTranslate() {
+    if (translateState === "loading" || translateState === "streaming") {
+      translateAbortRef.current?.abort();
+      setTranslateState("idle");
+      return;
+    }
+
+    setTranslated("");
+    setTranslateState("loading");
+
+    const abort = new AbortController();
+    translateAbortRef.current = abort;
+
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: explanation, targetLang }),
+        signal: abort.signal,
+      });
+
+      if (!res.ok) {
+        setTranslated("Translation failed. Please try again.");
+        setTranslateState("error");
+        return;
+      }
+
+      setTranslateState("streaming");
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        setTranslated((prev) => prev + decoder.decode(value, { stream: true }));
+      }
+
+      setTranslateState("done");
+    } catch (e: unknown) {
+      if (e instanceof Error && e.name === "AbortError") {
+        setTranslateState("idle");
+      } else {
+        setTranslated("Something went wrong. Please try again.");
+        setTranslateState("error");
       }
     }
   }
@@ -138,7 +204,7 @@ function PaperCard({ paper }: PaperCardProps) {
 
       {/* AI Explanation */}
       {(explainState !== "idle" || explanation) && (
-        <div className="border-t border-zinc-800 pt-3">
+        <div className="border-t border-zinc-800 pt-3 flex flex-col gap-3">
           {explainState === "loading" && (
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <span className="w-3 h-3 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
@@ -148,6 +214,56 @@ function PaperCard({ paper }: PaperCardProps) {
           {(explainState === "streaming" || explainState === "done" || explainState === "error") && explanation && (
             <div className="text-xs text-zinc-400 leading-relaxed whitespace-pre-wrap">
               {explanation}
+            </div>
+          )}
+
+          {/* Translate bar — only show after explanation is done */}
+          {explainState === "done" && (
+            <div className="flex flex-col gap-2 border-t border-zinc-800/60 pt-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={targetLang}
+                  onChange={(e) => { setTargetLang(e.target.value); setTranslated(""); setTranslateState("idle"); }}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors"
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.value} value={l.value}>{l.label}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleTranslate}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors ${
+                    translateState === "loading" || translateState === "streaming"
+                      ? "bg-amber-500/10 text-amber-300 hover:bg-red-500/10 hover:text-red-400"
+                      : translateState === "done"
+                      ? "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                      : "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/20"
+                  }`}
+                >
+                  {translateState === "loading" || translateState === "streaming" ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                      Stop
+                    </>
+                  ) : translateState === "done" ? (
+                    "Re-translate"
+                  ) : (
+                    "🌐 Translate"
+                  )}
+                </button>
+              </div>
+
+              {(translateState === "loading") && (
+                <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <span className="w-3 h-3 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+                  Translating to {targetLang}…
+                </div>
+              )}
+              {(translateState === "streaming" || translateState === "done" || translateState === "error") && translated && (
+                <div className="text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/50">
+                  {translated}
+                </div>
+              )}
             </div>
           )}
         </div>
