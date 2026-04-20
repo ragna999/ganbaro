@@ -22,6 +22,7 @@ export const tools: Tool[] = [
   { id: "letterhead", path: "/letterhead-generator", icon: "📋", label: "Letterhead Generator", desc: "Design a company letterhead with your logo and brand color. Download as PDF.",          category: "Utility" },
   { id: "papers",    path: "/paper-finder",         icon: "🔬", label: "Paper Finder",         desc: "Search 200M+ academic papers via OpenAlex. Get AI explanations of any paper.", category: "AI"      },
   { id: "qr",        path: "/qr-generator",         icon: "🔗", label: "QR Code Generator",    desc: "Generate QR codes from any URL or text. Customize colors and size. Download as PNG.", category: "Utility" },
+  { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI"      },
 ];
 
 export const faqItems = [
@@ -84,6 +85,11 @@ export const faqItems = [
     tool: "📋 Letterhead Generator",
     q: "What is Letterhead Generator?",
     a: "Create a professional company letterhead with your company name, tagline, logo, contact info, and brand color. Choose from three layout styles (Classic, Corporate, Minimal) and download as a PDF ready to use in Word or as a template.",
+  },
+  {
+    tool: "🎬 Video Clipper",
+    q: "What is Video Clipper?",
+    a: "Upload a video and AI will transcribe the speech, then suggest the 3-5 most interesting moments as clips. Click any suggestion to preview it in the video player, then download the clip as MP4. Everything is processed in your browser — nothing is uploaded to a server except the audio for transcription.",
   },
   {
     tool: "🔗 QR Code Generator",
