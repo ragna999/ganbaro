@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     "pdf ocr", "ocr online", "pdf splitter", "pdf reader", "pdf merger",
     "watermark pdf", "image to pdf", "invoice generator", "letterhead generator",
     "repo explainer", "github repo explainer", "doc qa", "ascii art generator",
+    "paper finder", "academic paper search", "research paper ai", "semantic scholar",
     "ai tools", "free tools", "online pdf tools", "free invoice maker",
   ],
   metadataBase: new URL("https://ganbaro.vercel.app"),

@@ -20,6 +20,7 @@ export const tools: Tool[] = [
   { id: "watermark",path: "/watermark-pdf",   icon: "🔏",  label: "Watermark PDF",   desc: "Add a text watermark to every page of a PDF. Choose opacity, angle, and layout.",      category: "PDF"     },
   { id: "invoice",     path: "/invoice-generator",    icon: "🧾", label: "Invoice Generator",    desc: "Create and download professional PDF invoices. Add items, tax, and notes.",            category: "Utility" },
   { id: "letterhead", path: "/letterhead-generator", icon: "📋", label: "Letterhead Generator", desc: "Design a company letterhead with your logo and brand color. Download as PDF.",          category: "Utility" },
+  { id: "papers",    path: "/paper-finder",         icon: "🔬", label: "Paper Finder",         desc: "Search 200M+ academic papers via Semantic Scholar. Get AI explanations of any paper.", category: "AI"      },
 ];
 
 export const faqItems = [
@@ -82,6 +83,11 @@ export const faqItems = [
     tool: "📋 Letterhead Generator",
     q: "What is Letterhead Generator?",
     a: "Create a professional company letterhead with your company name, tagline, logo, contact info, and brand color. Choose from three layout styles (Classic, Corporate, Minimal) and download as a PDF ready to use in Word or as a template.",
+  },
+  {
+    tool: "🔬 Paper Finder",
+    q: "What is Paper Finder?",
+    a: "Search over 200 million academic papers from Semantic Scholar. Filter by year range, choose how many results to show, and click 'Explain with AI' on any paper to get a plain-language breakdown of its purpose, findings, and relevance. Great for students, researchers, and anyone curious about a topic.",
   },
 ];
 
