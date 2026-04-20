@@ -24,6 +24,7 @@ export const tools: Tool[] = [
   { id: "qr",        path: "/qr-generator",         icon: "🔗", label: "QR Code Generator",    desc: "Generate QR codes from any URL or text. Customize colors and size. Download as PNG.", category: "Utility" },
   { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI"      },
   { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility" },
+  { id: "rmbg",      path: "/remove-background",    icon: "🪄", label: "Remove Background",     desc: "Remove the background from any image using AI. Download as PNG. Runs in your browser.", category: "Utility" },
 ];
 
 export const faqItems = [
@@ -86,6 +87,11 @@ export const faqItems = [
     tool: "📋 Letterhead Generator",
     q: "What is Letterhead Generator?",
     a: "Create a professional company letterhead with your company name, tagline, logo, contact info, and brand color. Choose from three layout styles (Classic, Corporate, Minimal) and download as a PDF ready to use in Word or as a template.",
+  },
+  {
+    tool: "🪄 Remove Background",
+    q: "What is Remove Background?",
+    a: "Upload any image and AI will remove the background, leaving just the subject. The result downloads as a transparent PNG. Runs entirely in your browser using the U2-Net AI model — nothing is uploaded to a server. First run downloads the ~50MB model, subsequent uses are instant.",
   },
   {
     tool: "🎞️ Video Splitter",
