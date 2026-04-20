@@ -5,6 +5,7 @@ export interface Tool {
   label: string;
   desc: string;
   category: string;
+  beta?: boolean;
 }
 
 export const tools: Tool[] = [
@@ -22,10 +23,10 @@ export const tools: Tool[] = [
   { id: "letterhead", path: "/letterhead-generator", icon: "📋", label: "Letterhead Generator", desc: "Design a company letterhead with your logo and brand color. Download as PDF.",          category: "Utility" },
   { id: "papers",    path: "/paper-finder",         icon: "🔬", label: "Paper Finder",         desc: "Search 200M+ academic papers via OpenAlex. Get AI explanations of any paper.", category: "AI"      },
   { id: "qr",        path: "/qr-generator",         icon: "🔗", label: "QR Code Generator",    desc: "Generate QR codes from any URL or text. Customize colors and size. Download as PNG.", category: "Utility" },
-  { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI"      },
-  { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility" },
-  { id: "rmbg",      path: "/remove-background",    icon: "🪄", label: "Remove Background",     desc: "Remove the background from any image using AI. Download as PNG. Runs in your browser.", category: "Utility" },
-  { id: "upscale",   path: "/image-upscaler",       icon: "🔭", label: "Image Upscaler",        desc: "Upscale images 2× or 4× with high-quality Lanczos resampling. Enlarge photos without blur. Runs in your browser.", category: "Utility" },
+  { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI",      beta: true },
+  { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility", beta: true },
+  { id: "rmbg",      path: "/remove-background",    icon: "🪄", label: "Remove Background",     desc: "Remove the background from any image using AI. Download as PNG. Runs in your browser.", category: "Utility", beta: true },
+  { id: "upscale",   path: "/image-upscaler",       icon: "🔭", label: "Image Upscaler",        desc: "Upscale images 2× or 4× with high-quality Lanczos resampling. Enlarge photos without blur. Runs in your browser.", category: "Utility", beta: true },
 ];
 
 export const faqItems = [

@@ -43,9 +43,16 @@ export default function HomePage() {
             >
               <div className="flex items-start justify-between mb-3">
                 <span className="text-3xl">{tool.icon}</span>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${categoryColor[tool.category]}`}>
-                  {tool.category}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  {tool.beta && (
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20">
+                      Beta
+                    </span>
+                  )}
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${categoryColor[tool.category]}`}>
+                    {tool.category}
+                  </span>
+                </div>
               </div>
               <p className="text-sm font-semibold text-zinc-100 mb-1.5 group-hover:text-white">
                 {tool.label}

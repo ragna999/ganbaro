@@ -157,9 +157,9 @@ export default function PdfSplitter() {
             <div className="flex items-center gap-3">
               <input
                 type="range"
-                min={10}
+                min={2}
                 max={100}
-                step={10}
+                step={1}
                 value={pagesPerChunk}
                 onChange={(e) => setPagesPerChunk(Number(e.target.value))}
                 className="flex-1 sm:w-32 accent-violet-500"
