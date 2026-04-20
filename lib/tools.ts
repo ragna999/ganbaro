@@ -25,7 +25,7 @@ export const tools: Tool[] = [
   { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI"      },
   { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility" },
   { id: "rmbg",      path: "/remove-background",    icon: "🪄", label: "Remove Background",     desc: "Remove the background from any image using AI. Download as PNG. Runs in your browser.", category: "Utility" },
-  { id: "upscale",   path: "/image-upscaler",       icon: "🔭", label: "Image Upscaler",        desc: "Upscale images 2× or 4× using AI. Restore old photos or enhance low-res images.", category: "Utility" },
+  { id: "upscale",   path: "/image-upscaler",       icon: "🔭", label: "Image Upscaler",        desc: "Upscale images 2× or 4× with high-quality Lanczos resampling. Enlarge photos without blur. Runs in your browser.", category: "Utility" },
 ];
 
 export const faqItems = [
@@ -92,7 +92,7 @@ export const faqItems = [
   {
     tool: "🔭 Image Upscaler",
     q: "What is Image Upscaler?",
-    a: "Upload an image and upscale it 2× or 4× using the ESRGAN AI model. Great for restoring old or blurry photos, enhancing low-resolution images, or preparing images for print. Output downloads as PNG. Runs entirely in your browser — recommended max input size 1000×1000px for best performance.",
+    a: "Upload an image and upscale it 2× or 4× using high-quality Lanczos resampling. Great for enlarging photos, preparing images for print, or scaling up low-resolution images without blurring. Output downloads as PNG. Runs entirely in your browser — nothing is uploaded to a server.",
   },
   {
     tool: "🪄 Remove Background",

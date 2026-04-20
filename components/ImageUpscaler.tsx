@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 
-type Status = "idle" | "loading-model" | "processing" | "done" | "error";
+type Status = "idle" | "processing" | "done" | "error";
 
 const SCALE_OPTIONS = [
   { label: "2×", value: 2 },
@@ -18,11 +18,9 @@ export default function ImageUpscaler() {
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [showOriginal, setShowOriginal] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [origSize, setOrigSize] = useState<{ w: number; h: number } | null>(null);
   const [resultSize, setResultSize] = useState<{ w: number; h: number } | null>(null);
 
-  const abortRef = useRef<AbortController | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   function handleFileSelect(file: File) {
@@ -48,54 +46,34 @@ export default function ImageUpscaler() {
   }
 
   async function handleUpscale() {
-    if (!imgRef.current) return;
-    abortRef.current?.abort();
-    const abort = new AbortController();
-    abortRef.current = abort;
+    if (!imgRef.current || !origSize) return;
 
-    setStatus("loading-model");
-    setProgress(0);
+    setStatus("processing");
     setResult("");
     setResultSize(null);
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const tf = await (import("@tensorflow/tfjs") as Promise<any>);
-      await tf.ready();
+      const PicaMod = await (import("pica") as Promise<any>);
+      const Pica = PicaMod.default ?? PicaMod;
+      const pica = new Pica();
 
-      if (abort.signal.aborted) return;
+      const src = document.createElement("canvas");
+      src.width = origSize.w;
+      src.height = origSize.h;
+      src.getContext("2d")!.drawImage(imgRef.current, 0, 0);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const upscalerMod = await (import("upscaler") as Promise<any>);
-      const Upscaler = upscalerMod.default ?? upscalerMod;
-      const { default: model } = scale === 4
-        ? await import("@upscalerjs/esrgan-slim/4x")
-        : await import("@upscalerjs/esrgan-slim/2x");
+      const dst = document.createElement("canvas");
+      dst.width = origSize.w * scale;
+      dst.height = origSize.h * scale;
 
-      if (abort.signal.aborted) return;
-      setStatus("processing");
+      await pica.resize(src, dst, { quality: 3, alpha: true });
+      const blob = await pica.toBlob(dst, "image/png");
 
-      const upscaler = new Upscaler({ model });
-
-      const upscaled = await upscaler.upscale(imgRef.current, {
-        output: "base64",
-        patchSize: 64,
-        padding: 4,
-        progress: (pct: number) => {
-          if (!abort.signal.aborted) setProgress(Math.round(pct * 100));
-        },
-      });
-
-      if (abort.signal.aborted) return;
-
-      const dataUrl = `data:image/png;base64,${upscaled}`;
-      setResult(dataUrl);
-
-      if (origSize) setResultSize({ w: origSize.w * scale, h: origSize.h * scale });
-      setProgress(100);
+      setResult(URL.createObjectURL(blob));
+      setResultSize({ w: dst.width, h: dst.height });
       setStatus("done");
     } catch (e: unknown) {
-      if (abort.signal.aborted) return;
       setError(e instanceof Error ? e.message : "Upscaling failed. Please try again.");
       setStatus("error");
     }
@@ -110,7 +88,6 @@ export default function ImageUpscaler() {
   }
 
   function handleReset() {
-    abortRef.current?.abort();
     setStatus("idle");
     setOriginal("");
     setResult("");
@@ -119,11 +96,8 @@ export default function ImageUpscaler() {
     setShowOriginal(false);
     setOrigSize(null);
     setResultSize(null);
-    setProgress(0);
     imgRef.current = null;
   }
-
-  const busy = status === "loading-model" || status === "processing";
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
@@ -134,7 +108,7 @@ export default function ImageUpscaler() {
           <h1 className="text-2xl font-bold text-white">Image Upscaler</h1>
         </div>
         <p className="text-zinc-500 text-sm">
-          Upscale images 2× or 4× using AI. Great for restoring old photos or low-res images. Runs in your browser.
+          Upscale images 2× or 4× with high-quality Lanczos resampling. Great for enlarging photos or low-res images. Runs in your browser.
         </p>
       </div>
 
@@ -145,7 +119,7 @@ export default function ImageUpscaler() {
       )}
 
       {/* Upload */}
-      {status === "idle" || status === "error" ? (
+      {(status === "idle" || status === "error") && (
         <div className="flex flex-col gap-4">
           <div
             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -160,7 +134,7 @@ export default function ImageUpscaler() {
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); }} />
             <p className="text-5xl mb-4">🔭</p>
             <p className="text-sm text-zinc-400">Drop an image here or click to browse</p>
-            <p className="text-xs text-zinc-600 mt-1">JPG, PNG, WebP — recommended max 1000×1000px</p>
+            <p className="text-xs text-zinc-600 mt-1">JPG, PNG, WebP</p>
           </div>
 
           {original && origSize && (
@@ -201,10 +175,10 @@ export default function ImageUpscaler() {
             </>
           )}
         </div>
-      ) : null}
+      )}
 
       {/* Processing */}
-      {busy && (
+      {status === "processing" && (
         <div className="flex flex-col items-center gap-6 py-12">
           {original && (
             <div className="relative w-48 h-48 rounded-xl overflow-hidden border border-zinc-800">
@@ -215,21 +189,7 @@ export default function ImageUpscaler() {
               </div>
             </div>
           )}
-          <div className="w-full max-w-sm flex flex-col gap-2">
-            <div className="flex items-center justify-between text-xs text-zinc-400">
-              <span>{status === "loading-model" ? "Loading AI model…" : `Upscaling ${scale}×…`}</span>
-              <span className="font-mono tabular-nums">{progress}%</span>
-            </div>
-            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-violet-500 rounded-full transition-all duration-200"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            {status === "loading-model" && (
-              <p className="text-xs text-zinc-600">Loading ESRGAN model (~20MB)</p>
-            )}
-          </div>
+          <p className="text-sm text-zinc-400">Upscaling {scale}×…</p>
         </div>
       )}
 
