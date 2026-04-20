@@ -60,10 +60,10 @@ export default function ImageUpscaler() {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const [{ default: Upscaler }, { default: model }] = await Promise.all([
-        import("upscalerjs") as Promise<any>,
-        import(`@upscalerjs/esrgan-slim/${scale}x` as "@upscalerjs/esrgan-slim/2x"),
-      ]);
+      const { default: Upscaler } = await (import("upscalerjs") as Promise<any>);
+      const { default: model } = scale === 4
+        ? await import("@upscalerjs/esrgan-slim/4x")
+        : await import("@upscalerjs/esrgan-slim/2x");
 
       if (abort.signal.aborted) return;
       setStatus("processing");
