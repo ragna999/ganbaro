@@ -237,7 +237,7 @@ export default function VideoClipper() {
               <div>
                 <p className="text-4xl mb-3">🎬</p>
                 <p className="text-sm text-zinc-400">Drop a video here or click to browse</p>
-                <p className="text-xs text-zinc-600 mt-1">MP4, MOV, WebM — max 500MB</p>
+                <p className="text-xs text-zinc-600 mt-1">MP4, MOV, WebM — best under 10 minutes</p>
               </div>
             )}
           </div>
