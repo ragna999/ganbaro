@@ -178,6 +178,14 @@ export default function VideoClipper() {
         </p>
       </div>
 
+      {/* Setup note */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 mb-6 text-xs text-zinc-500 leading-relaxed">
+        <span className="text-zinc-400 font-medium">Setup required:</span> This tool needs a free{" "}
+        <span className="text-violet-400 font-mono">GROQ_API_KEY</span> in{" "}
+        <span className="font-mono">.env.local</span> for speech transcription.{" "}
+        Get one free at <span className="text-zinc-400">console.groq.com</span> — 7,200 min/day free.
+      </div>
+
       {/* Error */}
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400 mb-6">
