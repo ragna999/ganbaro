@@ -21,6 +21,7 @@ export const tools: Tool[] = [
   { id: "invoice",     path: "/invoice-generator",    icon: "🧾", label: "Invoice Generator",    desc: "Create and download professional PDF invoices. Add items, tax, and notes.",            category: "Utility" },
   { id: "letterhead", path: "/letterhead-generator", icon: "📋", label: "Letterhead Generator", desc: "Design a company letterhead with your logo and brand color. Download as PDF.",          category: "Utility" },
   { id: "papers",    path: "/paper-finder",         icon: "🔬", label: "Paper Finder",         desc: "Search 200M+ academic papers via OpenAlex. Get AI explanations of any paper.", category: "AI"      },
+  { id: "qr",        path: "/qr-generator",         icon: "🔗", label: "QR Code Generator",    desc: "Generate QR codes from any URL or text. Customize colors and size. Download as PNG.", category: "Utility" },
 ];
 
 export const faqItems = [
@@ -83,6 +84,11 @@ export const faqItems = [
     tool: "📋 Letterhead Generator",
     q: "What is Letterhead Generator?",
     a: "Create a professional company letterhead with your company name, tagline, logo, contact info, and brand color. Choose from three layout styles (Classic, Corporate, Minimal) and download as a PDF ready to use in Word or as a template.",
+  },
+  {
+    tool: "🔗 QR Code Generator",
+    q: "What is QR Code Generator?",
+    a: "Generate a QR code from any URL or text. Customize the size (128–1024px), QR color, background color, and error correction level. Download the result as a PNG. Everything runs in your browser — nothing is uploaded to a server.",
   },
   {
     tool: "🔬 Paper Finder",
