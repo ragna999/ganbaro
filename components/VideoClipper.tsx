@@ -56,56 +56,73 @@ export default function VideoClipper() {
     setVideoUrl(URL.createObjectURL(file));
   }
 
+  function toMsg(e: unknown): string {
+    if (e instanceof Error) return e.message;
+    if (typeof e === "string") return e;
+    try { return JSON.stringify(e); } catch { return "Unknown error"; }
+  }
+
   async function handleProcess() {
     if (!videoFile) return;
     setError("");
     setPhase("processing");
 
+    // Step 1: Load ffmpeg + extract audio
+    setProcessingStep("extracting");
+    let audioBlob: Blob;
     try {
-      // Step 1: Extract audio with ffmpeg.wasm
-      setProcessingStep("extracting");
       const ffmpeg = await loadFfmpeg();
-      await ffmpeg.writeFile("input.mp4", await fetchFile(videoFile));
-      await ffmpeg.exec(["-i", "input.mp4", "-vn", "-ar", "16000", "-ac", "1", "-b:a", "32k", "audio.mp3"]);
-      const audioData = await ffmpeg.readFile("audio.mp3");
-      const audioBlob = new Blob([(audioData as Uint8Array).buffer as ArrayBuffer], { type: "audio/mp3" });
+      const inputName = "input" + (videoFile.name.match(/\.\w+$/)?.[0] ?? ".mp4");
+      await ffmpeg.writeFile(inputName, await fetchFile(videoFile));
+      const ret = await ffmpeg.exec([
+        "-i", inputName,
+        "-vn", "-ar", "16000", "-ac", "1",
+        "-c:a", "pcm_s16le",
+        "audio.wav",
+      ]);
+      if (ret !== 0) throw new Error(`ffmpeg audio extraction failed (exit ${ret})`);
+      const audioData = await ffmpeg.readFile("audio.wav");
+      audioBlob = new Blob([(audioData as Uint8Array).buffer as ArrayBuffer], { type: "audio/wav" });
+    } catch (e) {
+      setError(`Audio extraction failed: ${toMsg(e)}`);
+      setPhase("upload");
+      return;
+    }
 
-      // Step 2: Transcribe via Groq Whisper
-      setProcessingStep("transcribing");
+    // Step 2: Transcribe
+    setProcessingStep("transcribing");
+    let segments: { start: number; end: number; text: string }[];
+    try {
       const fd = new FormData();
-      fd.append("audio", new File([audioBlob], "audio.mp3", { type: "audio/mp3" }));
-      const transcribeRes = await fetch("/api/transcribe", { method: "POST", body: fd });
-      if (!transcribeRes.ok) {
-        const { error: msg } = await transcribeRes.json();
-        throw new Error(msg ?? "Transcription failed.");
-      }
-      const { segments } = await transcribeRes.json();
-      if (!segments || segments.length === 0) throw new Error("No speech detected in this video.");
+      fd.append("audio", new File([audioBlob], "audio.wav", { type: "audio/wav" }));
+      const res = await fetch("/api/transcribe", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Transcription failed.");
+      if (!data.segments || data.segments.length === 0) throw new Error("No speech detected in this video.");
+      segments = data.segments;
+    } catch (e) {
+      setError(`Transcription failed: ${toMsg(e)}`);
+      setPhase("upload");
+      return;
+    }
 
-      // Step 3: Suggest clips via LLM
-      setProcessingStep("suggesting");
-      const suggestRes = await fetch("/api/clip-suggest", {
+    // Step 3: Suggest clips
+    setProcessingStep("suggesting");
+    try {
+      const res = await fetch("/api/clip-suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ segments }),
       });
-      if (!suggestRes.ok) {
-        const { error: msg } = await suggestRes.json();
-        throw new Error(msg ?? "Failed to get suggestions.");
-      }
-      const { suggestions: clips } = await suggestRes.json();
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to get suggestions.");
+      const clips: ClipSuggestion[] = data.suggestions;
       setSuggestions(clips);
       setSelected(0);
       setPhase("results");
-
-      // Pre-seek to first suggestion
-      if (videoRef.current && clips.length > 0) {
-        videoRef.current.currentTime = clips[0].start;
-      }
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Something went wrong. Please try again.";
-      console.error("VideoClipper error:", msg);
-      setError(msg);
+      if (videoRef.current && clips.length > 0) videoRef.current.currentTime = clips[0].start;
+    } catch (e) {
+      setError(`AI suggestion failed: ${toMsg(e)}`);
       setPhase("upload");
     }
   }
