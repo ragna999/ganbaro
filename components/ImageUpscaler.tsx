@@ -60,6 +60,12 @@ export default function ImageUpscaler() {
 
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tf = await (import("@tensorflow/tfjs") as Promise<any>);
+      await tf.ready();
+
+      if (abort.signal.aborted) return;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const upscalerMod = await (import("upscaler") as Promise<any>);
       const Upscaler = upscalerMod.default ?? upscalerMod;
       const { default: model } = scale === 4
