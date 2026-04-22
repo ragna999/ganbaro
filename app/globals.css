@@ -11,6 +11,12 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.35);
+  color: #f4f4f5;
 }
 
 ::-webkit-scrollbar {
