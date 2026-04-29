@@ -27,6 +27,7 @@ export const tools: Tool[] = [
   { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility", beta: true },
   { id: "rmbg",      path: "/remove-background",    icon: "🪄", label: "Remove Background",     desc: "Remove the background from any image using AI. Download as PNG. Runs in your browser.", category: "Utility", beta: true },
   { id: "upscale",   path: "/image-upscaler",       icon: "🔭", label: "Image Upscaler",        desc: "Upscale images 2× or 4× with high-quality Lanczos resampling. Enlarge photos without blur. Runs in your browser.", category: "Utility", beta: true },
+  { id: "papergen",  path: "/paper-generator",      icon: "✍️", label: "Paper Generator",       desc: "Generate a full academic paper from a title. Set page count, references, and language. Real refs from OpenAlex.", category: "AI", beta: true },
 ];
 
 export const faqItems = [
@@ -119,6 +120,11 @@ export const faqItems = [
     tool: "🔬 Paper Finder",
     q: "What is Paper Finder?",
     a: "Search over 200 million academic papers from OpenAlex. Filter by year range, choose how many results to show, and click 'Explain with AI' on any paper to get a plain-language breakdown of its purpose, findings, and relevance. Great for students, researchers, and anyone curious about a topic.",
+  },
+  {
+    tool: "✍️ Paper Generator",
+    q: "What is Paper Generator?",
+    a: "Enter a paper title, choose the number of pages (4–15), number of references (5–25), and the language — then AI generates a complete academic paper with Abstract, Introduction, Literature Review, Methodology, Results & Discussion, Conclusion, and References. References are sourced from real papers on OpenAlex. Download the result as a Markdown file.",
   },
 ];
 
