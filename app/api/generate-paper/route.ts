@@ -5,9 +5,35 @@ export const maxDuration = 60;
 
 interface RefPaper {
   title: string;
-  authors: string;
+  authors: string[];
   year: number | null;
   doi: string | null;
+}
+
+// "Ahmad Yusuf Alfaruq" → "Alfaruq, A. Y."
+function toApaAuthor(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "Unknown";
+  if (parts.length === 1) return parts[0];
+  const lastName = parts[parts.length - 1];
+  const initials = parts.slice(0, -1).map((p) => p[0].toUpperCase() + ".").join(" ");
+  return `${lastName}, ${initials}`;
+}
+
+function formatApaEntry(ref: RefPaper, index: number): string {
+  const authorStr =
+    ref.authors.length === 0
+      ? "Unknown"
+      : ref.authors.length === 1
+      ? toApaAuthor(ref.authors[0])
+      : ref.authors.length === 2
+      ? `${toApaAuthor(ref.authors[0])}, & ${toApaAuthor(ref.authors[1])}`
+      : `${toApaAuthor(ref.authors[0])}, et al.`;
+
+  const year = ref.year ? `(${ref.year})` : "(n.d.)";
+  const doi = ref.doi ? ` https://doi.org/${ref.doi}` : "";
+
+  return `${index + 1}. ${authorStr} ${year}. ${ref.title}.${doi}`;
 }
 
 async function fetchReferences(query: string, count: number): Promise<RefPaper[]> {
@@ -35,7 +61,7 @@ async function fetchReferences(query: string, count: number): Promise<RefPaper[]
         .filter(Boolean);
       return {
         title: w.title ?? "Untitled",
-        authors: authors.join(", ") || "Unknown",
+        authors,
         year: w.publication_year ?? null,
         doi,
       };
@@ -45,88 +71,164 @@ async function fetchReferences(query: string, count: number): Promise<RefPaper[]
   }
 }
 
+// Localized section names for the AI prompt
+const LOCALIZED_SECTIONS: Record<string, Record<string, string>> = {
+  Indonesian: {
+    Abstract: "Abstrak",
+    Introduction: "Pendahuluan",
+    "Literature Review": "Tinjauan Pustaka",
+    Methodology: "Metodologi Penelitian",
+    "Results and Discussion": "Hasil dan Pembahasan",
+    Conclusion: "Penutup",
+    References: "Daftar Pustaka",
+  },
+  Spanish: {
+    Abstract: "Resumen",
+    Introduction: "Introducción",
+    "Literature Review": "Revisión de Literatura",
+    Methodology: "Metodología",
+    "Results and Discussion": "Resultados y Discusión",
+    Conclusion: "Conclusión",
+    References: "Referencias",
+  },
+  French: {
+    Abstract: "Résumé",
+    Introduction: "Introduction",
+    "Literature Review": "Revue de Littérature",
+    Methodology: "Méthodologie",
+    "Results and Discussion": "Résultats et Discussion",
+    Conclusion: "Conclusion",
+    References: "Références",
+  },
+  German: {
+    Abstract: "Zusammenfassung",
+    Introduction: "Einleitung",
+    "Literature Review": "Literaturüberblick",
+    Methodology: "Methodik",
+    "Results and Discussion": "Ergebnisse und Diskussion",
+    Conclusion: "Fazit",
+    References: "Literaturverzeichnis",
+  },
+  Portuguese: {
+    Abstract: "Resumo",
+    Introduction: "Introdução",
+    "Literature Review": "Revisão de Literatura",
+    Methodology: "Metodologia",
+    "Results and Discussion": "Resultados e Discussão",
+    Conclusion: "Conclusão",
+    References: "Referências",
+  },
+};
+
+function localizeSection(sectionName: string, language: string): string {
+  return LOCALIZED_SECTIONS[language]?.[sectionName] ?? sectionName;
+}
+
+// Section-specific writing guides
+const SECTION_GUIDES: Record<string, (lang: string, chunk: number, total: number) => string> = {
+  Abstract: () =>
+    "Write a structured abstract covering: research background and problem, objectives, methodology used, key findings, and conclusions/implications. Be precise and informative.",
+  Introduction: () =>
+    "Write a comprehensive introduction covering: (1) research background and context with supporting evidence, (2) identification of the problem and research gap supported by literature, (3) research objectives and questions, (4) significance and contribution of the study, (5) brief overview of the paper structure. Support every claim with in-text citations.",
+  "Literature Review": (_, chunk, total) =>
+    chunk === 0
+      ? "Write a thorough literature review. For each referenced work, discuss its methodology, findings, and contribution to the field in detail. Organize thematically. Critically analyze and synthesize sources — do not merely list them. Identify debates, contradictions, and gaps. Minimum 2 full paragraphs per theme."
+      : `Continue the literature review (part ${chunk + 1} of ${total}). Introduce new themes or perspectives not yet covered. Synthesize multiple sources per paragraph. End by connecting the gaps to your research objectives.`,
+  Methodology: () =>
+    "Write a detailed methodology section covering: (1) research design and paradigm (qualitative/quantitative/mixed) with justification, (2) data sources and collection methods in detail, (3) analytical framework or instruments used, (4) validity and reliability measures, (5) limitations of the methodology. Cite methodological literature to support your choices.",
+  "Results and Discussion": (_, chunk, total) =>
+    chunk === 0
+      ? "Present and discuss the main findings in depth. For each finding: present the evidence, interpret its meaning, connect it to the research objectives, and compare with prior literature using citations. Use detailed paragraphs, not bullet points."
+      : `Continue the results and discussion (part ${chunk + 1} of ${total}). Present additional findings and their implications. Compare and contrast with existing literature. Discuss theoretical and practical implications in depth.`,
+  Conclusion: () =>
+    "Write a comprehensive conclusion covering: (1) restatement of research objectives, (2) summary of key findings and their significance, (3) theoretical contributions, (4) practical implications and recommendations, (5) limitations of the study, (6) directions for future research.",
+};
+
 function buildPrompt(
   title: string,
   language: string,
   refsContext: string,
   sectionName: string,
-  sectionNumber: number,
   chunkIndex: number,
   totalChunks: number,
   wordTarget: number
 ): string {
+  const localName = localizeSection(sectionName, language);
   const partNote = totalChunks > 1 ? ` (Part ${chunkIndex + 1} of ${totalChunks})` : "";
-  const isContinuation = chunkIndex > 0;
+  const guide = SECTION_GUIDES[sectionName]?.(language, chunkIndex, totalChunks) ?? "Write this section thoroughly and academically.";
+  const continuationNote =
+    chunkIndex > 0
+      ? "\nThis is a continuation — do not repeat content from previous parts. Continue naturally and coherently."
+      : "";
 
-  const guides: Record<string, (i: number) => string> = {
-    Abstract: () => "Write a concise summary covering: purpose, methods, key findings, and conclusions. Do not include a section header — start directly.",
-    Introduction: () => "Cover: background and context, problem statement, research objectives, significance of the study, and paper structure overview.",
-    "Literature Review": (i) =>
-      i === 0
-        ? "Review foundational and recent literature organized by theme. Identify key debates and research gaps."
-        : "Continue the literature review with additional themes. Synthesize critically and connect to the research gap.",
-    Methodology: () => "Describe: research design, data sources and collection, analytical methods, and methodological limitations.",
-    "Results and Discussion": (i) =>
-      i === 0
-        ? "Present the main findings with evidence. Begin interpreting results in light of research objectives."
-        : "Continue presenting and discussing findings. Compare with prior literature and discuss broader implications.",
-    Conclusion: () => "Summarize key findings, restate contributions, acknowledge limitations, and propose future research directions.",
-  };
+  return `You are an expert academic writer. You are writing a section of a formal academic paper.
 
-  const guide = guides[sectionName]?.(chunkIndex) ?? "Write this section thoroughly and academically.";
-  const continuationNote = isContinuation
-    ? "\nThis is a continuation — do not repeat content from earlier parts. Continue naturally."
-    : "";
+PAPER TITLE: "${title}"
+LANGUAGE: Write entirely in ${language}. Use formal academic ${language}.
+SECTION: ${localName}${partNote}
 
-  return `You are an expert academic writer writing a paper titled: "${title}"
-Language: Write entirely in ${language}.
 ${refsContext}
 
-Write ONLY the ${sectionName}${partNote} section. Target: approximately ${wordTarget} words.
+TASK: Write ONLY the body text of the ${localName} section${partNote}. Do NOT include the section heading.
+${continuationNote}
+
+CONTENT GUIDE:
 ${guide}
-Use [n] in-text citations where appropriate. Do not include the section header in your output.${continuationNote}`;
+
+WORD COUNT: This section MUST be at least ${wordTarget} words long. Write in full, dense academic paragraphs. Be thorough and detailed — do not stop early. Every paragraph must be substantive and well-supported by citations.
+
+CITATION STYLE: Use APA in-text format: (Author, Year). Derive the author's last name from the references provided. Cite frequently and appropriately throughout.
+
+FORMATTING: Write in continuous prose paragraphs. No bullet points. No subheadings unless academically appropriate.`;
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  // ── Refs mode: fetch OpenAlex refs and return as JSON ──
+  // ── Refs mode ──
   if (body.mode === "refs") {
     const { title, numRefs } = body;
-    if (!title?.trim()) return NextResponse.json({ refs: [] });
+    if (!title?.trim()) return NextResponse.json({ bibliography: [], citationContext: "" });
 
-    const refs = await fetchReferences(title.trim(), Math.min(numRefs ?? 10, 25));
-    const formatted = refs.map(
-      (r, i) =>
-        `[${i + 1}] ${r.authors}. "${r.title}." ${r.year ?? "n.d."}${r.doi ? `. https://doi.org/${r.doi}` : ""}`
-    );
-    return NextResponse.json({ refs: formatted });
+    const rawRefs = await fetchReferences(title.trim(), Math.min(numRefs ?? 10, 25));
+
+    const bibliography = rawRefs.map((r, i) => formatApaEntry(r, i));
+
+    // Context string passed into every section prompt
+    const citationContext =
+      bibliography.length > 0
+        ? `AVAILABLE REFERENCES (cite in-text as (LastName, Year)):\n${bibliography.join("\n")}`
+        : "Generate plausible APA-style citations inline where appropriate.";
+
+    return NextResponse.json({ bibliography, citationContext });
   }
 
-  // ── Section mode: generate one chunk, stream text ──
-  const { title, language, refs, sectionName, sectionNumber, chunkIndex, totalChunks, wordTarget } = body;
+  // ── Section mode ──
+  const {
+    title, language, citationContext,
+    sectionName, chunkIndex, totalChunks, wordTarget,
+  } = body;
+
   if (!title?.trim() || !sectionName) {
     return new Response("Missing required fields", { status: 400 });
   }
 
-  const refsContext =
-    Array.isArray(refs) && refs.length > 0
-      ? `Use these real references — cite with [n] notation:\n${refs.join("\n")}`
-      : "Generate plausible academic citations inline.";
+  const refsCtx = citationContext ?? "Generate plausible APA-style citations inline where appropriate.";
 
   const prompt = buildPrompt(
-    title, language ?? "English", refsContext,
-    sectionName, sectionNumber, chunkIndex ?? 0, totalChunks ?? 1, wordTarget ?? 1000
+    title, language ?? "English", refsCtx,
+    sectionName, chunkIndex ?? 0, totalChunks ?? 1, wordTarget ?? 1000
   );
 
-  const maxTokens = Math.min(Math.ceil((wordTarget ?? 1000) * 1.5) + 200, 3500);
+  // tokens ≈ words × 2 to give the model room to write fully
+  const maxTokens = Math.min(Math.ceil((wordTarget ?? 1000) * 2) + 300, 4000);
 
   const stream = await nvidia.chat.completions.create({
     model: MODELS.paperGenerator,
     messages: [{ role: "user", content: prompt }],
     stream: true,
     max_tokens: maxTokens,
-    temperature: 0.55,
+    temperature: 0.6,
   });
 
   const encoder = new TextEncoder();

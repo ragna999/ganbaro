@@ -23,10 +23,63 @@ const LANGUAGES = [
 
 const PAGE_OPTIONS = [4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30];
 const REF_OPTIONS = [5, 8, 10, 15, 20, 25];
-const MAX_CHUNK_WORDS = 1100; // safe margin for 60s timeout
+const MAX_CHUNK_WORDS = 1300;
+
+// Localized section names for headers in the output
+const SECTION_NAMES: Record<string, Record<string, string>> = {
+  Indonesian: {
+    Abstract: "Abstrak",
+    Introduction: "Pendahuluan",
+    "Literature Review": "Tinjauan Pustaka",
+    Methodology: "Metodologi Penelitian",
+    "Results and Discussion": "Hasil dan Pembahasan",
+    Conclusion: "Penutup",
+    References: "Daftar Pustaka",
+  },
+  Spanish: {
+    Abstract: "Resumen",
+    Introduction: "Introducción",
+    "Literature Review": "Revisión de Literatura",
+    Methodology: "Metodología",
+    "Results and Discussion": "Resultados y Discusión",
+    Conclusion: "Conclusión",
+    References: "Referencias",
+  },
+  French: {
+    Abstract: "Résumé",
+    Introduction: "Introduction",
+    "Literature Review": "Revue de Littérature",
+    Methodology: "Méthodologie",
+    "Results and Discussion": "Résultats et Discussion",
+    Conclusion: "Conclusion",
+    References: "Références",
+  },
+  German: {
+    Abstract: "Zusammenfassung",
+    Introduction: "Einleitung",
+    "Literature Review": "Literaturüberblick",
+    Methodology: "Methodik",
+    "Results and Discussion": "Ergebnisse und Diskussion",
+    Conclusion: "Fazit",
+    References: "Literaturverzeichnis",
+  },
+  Portuguese: {
+    Abstract: "Resumo",
+    Introduction: "Introdução",
+    "Literature Review": "Revisão de Literatura",
+    Methodology: "Metodologia",
+    "Results and Discussion": "Resultados e Discussão",
+    Conclusion: "Conclusão",
+    References: "Referências",
+  },
+};
+
+function getLocalizedName(sectionName: string, language: string): string {
+  return SECTION_NAMES[language]?.[sectionName] ?? sectionName;
+}
 
 interface Chunk {
-  sectionName: string;
+  sectionName: string; // internal English key
   sectionNumber: number;
   chunkIndex: number;
   totalChunks: number;
@@ -38,13 +91,13 @@ function buildChunks(pages: number): Chunk[] {
   const bodyWords = totalWords - 250;
 
   const sectionDefs = [
-    { name: "Abstract",              number: 0, words: 250 },
-    { name: "Introduction",          number: 1, words: Math.round(bodyWords * 0.15) },
-    { name: "Literature Review",     number: 2, words: Math.round(bodyWords * 0.27) },
-    { name: "Methodology",           number: 3, words: Math.round(bodyWords * 0.20) },
-    { name: "Results and Discussion",number: 4, words: Math.round(bodyWords * 0.28) },
-    { name: "Conclusion",            number: 5, words: Math.round(bodyWords * 0.10) },
-    { name: "References",            number: 6, words: 0 }, // injected, no AI call
+    { name: "Abstract",               number: 0, words: 250 },
+    { name: "Introduction",           number: 1, words: Math.round(bodyWords * 0.15) },
+    { name: "Literature Review",      number: 2, words: Math.round(bodyWords * 0.27) },
+    { name: "Methodology",            number: 3, words: Math.round(bodyWords * 0.20) },
+    { name: "Results and Discussion", number: 4, words: Math.round(bodyWords * 0.28) },
+    { name: "Conclusion",             number: 5, words: Math.round(bodyWords * 0.10) },
+    { name: "References",             number: 6, words: 0 },
   ];
 
   const chunks: Chunk[] = [];
@@ -63,32 +116,34 @@ function buildChunks(pages: number): Chunk[] {
   return chunks;
 }
 
-function chunkHeader(chunk: Chunk): string {
+function chunkHeader(chunk: Chunk, language: string): string {
   if (chunk.chunkIndex > 0) return "";
-  if (chunk.sectionName === "Abstract") return "## Abstract\n\n";
-  return `\n\n## ${chunk.sectionNumber}. ${chunk.sectionName}\n\n`;
+  const localName = getLocalizedName(chunk.sectionName, language);
+  if (chunk.sectionName === "Abstract") return `## ${localName}\n\n`;
+  return `\n\n## ${localName}\n\n`;
 }
 
-function progressLabel(chunk: Chunk): string {
+function progressLabel(chunk: Chunk, language: string): string {
+  const localName = getLocalizedName(chunk.sectionName, language);
   const part = chunk.totalChunks > 1 ? ` (${chunk.chunkIndex + 1}/${chunk.totalChunks})` : "";
-  return `${chunk.sectionName}${part}`;
+  return `${localName}${part}`;
 }
 
 export default function PaperGenerator() {
   const [title, setTitle] = useState("");
   const [pages, setPages] = useState(8);
   const [numRefs, setNumRefs] = useState(10);
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguage] = useState("Indonesian");
 
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
 
-  // Completed chunks are stored separately so we can continue from a known point
   const [chunkOutputs, setChunkOutputs] = useState<string[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [activeLabel, setActiveLabel] = useState("");
 
-  const [refs, setRefs] = useState<string[]>([]);
+  const [bibliography, setBibliography] = useState<string[]>([]);
+  const [citationContext, setCitationContext] = useState("");
   const [chunks, setChunks] = useState<Chunk[]>([]);
 
   const abortRef = useRef<AbortController | null>(null);
@@ -100,24 +155,25 @@ export default function PaperGenerator() {
   const runChunks = useCallback(async (
     fromIdx: number,
     allChunks: Chunk[],
-    fetchedRefs: string[],
+    ctxCitation: string,
+    biblio: string[],
+    lang: string,
   ) => {
     setStatus("generating");
 
     for (let i = fromIdx; i < allChunks.length; i++) {
       const chunk = allChunks[i];
-      setActiveLabel(progressLabel(chunk));
+      setActiveLabel(progressLabel(chunk, lang));
       setStreamingText("");
 
-      const header = chunkHeader(chunk);
+      const header = chunkHeader(chunk, lang);
 
-      // References section: inject directly, no AI call
+      // References: inject bibliography directly, no AI call
       if (chunk.sectionName === "References") {
+        const refLocalName = getLocalizedName("References", lang);
         const refText =
-          header +
-          (fetchedRefs.length > 0
-            ? fetchedRefs.join("\n")
-            : "*No references retrieved. Please check your query.*");
+          `\n\n## ${refLocalName}\n\n` +
+          (biblio.length > 0 ? biblio.join("\n\n") : "*Tidak ada referensi yang ditemukan.*");
         setChunkOutputs((prev) => [...prev, refText]);
         setStreamingText("");
         continue;
@@ -136,8 +192,8 @@ export default function PaperGenerator() {
           body: JSON.stringify({
             mode: "section",
             title,
-            language,
-            refs: fetchedRefs,
+            language: lang,
+            citationContext: ctxCitation,
             sectionName: chunk.sectionName,
             sectionNumber: chunk.sectionNumber,
             chunkIndex: chunk.chunkIndex,
@@ -148,7 +204,7 @@ export default function PaperGenerator() {
         });
 
         if (!res.ok) {
-          setError((await res.text()) || "Section generation failed.");
+          setError((await res.text()) || "Gagal generate section ini.");
           setStatus("error");
           return;
         }
@@ -168,7 +224,6 @@ export default function PaperGenerator() {
           outputRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
         }
 
-        // Chunk fully done — move to completed array
         setChunkOutputs((prev) => [...prev, chunkText]);
         setStreamingText("");
       } catch (e: unknown) {
@@ -176,7 +231,7 @@ export default function PaperGenerator() {
           setStatus("paused");
           return;
         }
-        setError("A network error occurred. You can continue from where it stopped.");
+        setError("Terjadi kesalahan jaringan. Klik Continue untuk melanjutkan.");
         setStatus("error");
         return;
       }
@@ -184,20 +239,20 @@ export default function PaperGenerator() {
 
     setStatus("done");
     setActiveLabel("");
-  }, [title, language]);
+  }, [title]);
 
   async function handleGenerate(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
 
-    // Reset everything
     setChunkOutputs([]);
     setStreamingText("");
     setError("");
     setStatus("fetching_refs");
 
     // 1. Fetch refs
-    let fetchedRefs: string[] = [];
+    let ctxCitation = "";
+    let biblio: string[] = [];
     try {
       const res = await fetch("/api/generate-paper", {
         method: "POST",
@@ -205,23 +260,25 @@ export default function PaperGenerator() {
         body: JSON.stringify({ mode: "refs", title: title.trim(), numRefs }),
       });
       const data = await res.json();
-      fetchedRefs = data.refs ?? [];
+      biblio = data.bibliography ?? [];
+      ctxCitation = data.citationContext ?? "";
     } catch {
-      // Non-fatal — proceed without real refs
+      // non-fatal
     }
-    setRefs(fetchedRefs);
+    setBibliography(biblio);
+    setCitationContext(ctxCitation);
 
     // 2. Build chunks
     const allChunks = buildChunks(pages);
     setChunks(allChunks);
 
     // 3. Generate
-    await runChunks(0, allChunks, fetchedRefs);
+    await runChunks(0, allChunks, ctxCitation, biblio, language);
   }
 
   async function handleContinue() {
     if (!chunks.length) return;
-    await runChunks(completedCount, chunks, refs);
+    await runChunks(completedCount, chunks, citationContext, bibliography, language);
   }
 
   function handleStop() {
@@ -258,19 +315,19 @@ export default function PaperGenerator() {
           </span>
         </div>
         <p className="text-zinc-500 text-sm leading-relaxed">
-          Generate a full academic paper from a title. References sourced from OpenAlex. Generated section by section — you can pause and continue anytime.
+          Generate full academic papers from a title. APA citation style. References from OpenAlex. Pause and continue anytime.
         </p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleGenerate} className="flex flex-col gap-4 mb-8">
         <div>
-          <label className="block text-xs font-medium text-zinc-400 mb-1.5">Paper Title</label>
+          <label className="block text-xs font-medium text-zinc-400 mb-1.5">Judul Paper</label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. The Impact of Machine Learning on Climate Change Prediction"
+            placeholder="e.g. Kebijakan Hukum Terhadap Narkotika Sintetis di Indonesia"
             className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
             disabled={isRunning}
           />
@@ -278,7 +335,7 @@ export default function PaperGenerator() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Pages</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Halaman</label>
             <select
               value={pages}
               onChange={(e) => setPages(Number(e.target.value))}
@@ -287,14 +344,14 @@ export default function PaperGenerator() {
             >
               {PAGE_OPTIONS.map((p) => (
                 <option key={p} value={p}>
-                  {p} pages (~{(p * 500).toLocaleString()} words)
+                  {p} halaman (~{(p * 500).toLocaleString()} kata)
                 </option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">References</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Referensi</label>
             <select
               value={numRefs}
               onChange={(e) => setNumRefs(Number(e.target.value))}
@@ -302,13 +359,13 @@ export default function PaperGenerator() {
               className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors"
             >
               {REF_OPTIONS.map((r) => (
-                <option key={r} value={r}>{r} references</option>
+                <option key={r} value={r}>{r} referensi</option>
               ))}
             </select>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Language</label>
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Bahasa</label>
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
@@ -351,34 +408,33 @@ export default function PaperGenerator() {
                 onClick={handleContinue}
                 className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
               >
-                Continue ({completedCount}/{totalChunkCount} sections done)
+                Continue ({completedCount}/{totalChunkCount})
               </button>
               <button
                 type="submit"
                 className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-sm font-medium transition-colors"
               >
-                Start over
+                Mulai ulang
               </button>
             </>
           )}
 
-          {/* Progress info */}
           {status === "fetching_refs" && (
-            <p className="text-xs text-zinc-500 animate-pulse">Fetching references from OpenAlex…</p>
+            <p className="text-xs text-zinc-500 animate-pulse">Mengambil referensi dari OpenAlex…</p>
           )}
           {status === "generating" && activeLabel && (
             <p className="text-xs text-zinc-500 animate-pulse">
-              Writing: <span className="text-zinc-400">{activeLabel}</span>
-              {totalChunkCount > 0 && (
-                <span className="text-zinc-600"> — {completedCount}/{totalChunkCount}</span>
-              )}
+              Menulis: <span className="text-zinc-400">{activeLabel}</span>
+              {totalChunkCount > 0 && <span className="text-zinc-600"> — {completedCount}/{totalChunkCount}</span>}
             </p>
           )}
           {status === "paused" && (
-            <p className="text-xs text-amber-500">Paused. Click Continue to resume.</p>
+            <p className="text-xs text-amber-500">Dijeda. Klik Continue untuk melanjutkan.</p>
           )}
           {status === "done" && (
-            <p className="text-xs text-green-500">Done — {Math.round(displayOutput.split(/\s+/).length).toLocaleString()} words generated.</p>
+            <p className="text-xs text-green-500">
+              Selesai — {Math.round(displayOutput.split(/\s+/).length).toLocaleString()} kata.
+            </p>
           )}
         </div>
       </form>
@@ -404,7 +460,7 @@ export default function PaperGenerator() {
           {(status === "done" || status === "paused") && (
             <div className="flex items-center justify-between">
               <p className="text-xs text-zinc-600">
-                ~{Math.round(displayOutput.split(/\s+/).length).toLocaleString()} words
+                ~{Math.round(displayOutput.split(/\s+/).length).toLocaleString()} kata
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -435,13 +491,12 @@ export default function PaperGenerator() {
         </div>
       )}
 
-      {/* Empty state */}
       {status === "idle" && !displayOutput && (
         <div className="text-center py-16 text-zinc-700">
           <p className="text-5xl mb-4">📝</p>
-          <p className="text-sm">Enter a title and click Generate to get started.</p>
+          <p className="text-sm">Masukkan judul dan klik Generate.</p>
           <p className="text-xs mt-2 text-zinc-700">
-            Generated section by section · Pause and continue anytime · References from OpenAlex
+            Sitasi APA · Referensi dari OpenAlex · Bisa pause & continue
           </p>
         </div>
       )}
