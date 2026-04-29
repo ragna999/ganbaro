@@ -124,24 +124,40 @@ function localizeSection(sectionName: string, language: string): string {
   return LOCALIZED_SECTIONS[language]?.[sectionName] ?? sectionName;
 }
 
+// Per-section citation rules — controls the CITATION STYLE line in the prompt
+const CITATION_RULES: Record<string, string> = {
+  Abstract:
+    "Do NOT use any in-text citations in the abstract. Write from the paper's own findings.",
+  Introduction:
+    "Use APA in-text citations (Author, Year) to support background claims and to justify the research gap. Cite only where the claim genuinely needs external support — not every sentence.",
+  "Literature Review":
+    "Use APA in-text citations (Author, Year) extensively. Every claim about prior work must be attributed. Synthesize multiple sources per paragraph where possible.",
+  Methodology:
+    "Use APA in-text citations (Author, Year) only when justifying your choice of research design or analytical framework (e.g. citing the methodologist who defined the approach). Do not cite for describing your own data collection steps.",
+  "Results and Discussion":
+    "Use APA in-text citations (Author, Year) only when comparing or contrasting your findings with prior literature. Your own results and observations do not need citations.",
+  Conclusion:
+    "Do NOT use in-text citations. The conclusion summarizes your own findings and contributions. Write entirely from the paper's own results.",
+};
+
 // Section-specific writing guides
 const SECTION_GUIDES: Record<string, (lang: string, chunk: number, total: number) => string> = {
   Abstract: () =>
     "Write a structured abstract covering: research background and problem, objectives, methodology used, key findings, and conclusions/implications. Be precise and informative.",
   Introduction: () =>
-    "Write a comprehensive introduction covering: (1) research background and context with supporting evidence, (2) identification of the problem and research gap supported by literature, (3) research objectives and questions, (4) significance and contribution of the study, (5) brief overview of the paper structure. Support every claim with in-text citations.",
+    "Write a comprehensive introduction covering: (1) research background and context, (2) identification of the problem and research gap supported by literature, (3) research objectives and questions, (4) significance and contribution of the study, (5) brief overview of the paper structure.",
   "Literature Review": (_, chunk, total) =>
     chunk === 0
       ? "Write a thorough literature review. For each referenced work, discuss its methodology, findings, and contribution to the field in detail. Organize thematically. Critically analyze and synthesize sources — do not merely list them. Identify debates, contradictions, and gaps. Minimum 2 full paragraphs per theme."
       : `Continue the literature review (part ${chunk + 1} of ${total}). Introduce new themes or perspectives not yet covered. Synthesize multiple sources per paragraph. End by connecting the gaps to your research objectives.`,
   Methodology: () =>
-    "Write a detailed methodology section covering: (1) research design and paradigm (qualitative/quantitative/mixed) with justification, (2) data sources and collection methods in detail, (3) analytical framework or instruments used, (4) validity and reliability measures, (5) limitations of the methodology. Cite methodological literature to support your choices.",
+    "Write a detailed methodology section covering: (1) research design and paradigm (qualitative/quantitative/mixed) with justification, (2) data sources and collection methods in detail, (3) analytical framework or instruments used, (4) validity and reliability measures, (5) limitations of the methodology.",
   "Results and Discussion": (_, chunk, total) =>
     chunk === 0
-      ? "Present and discuss the main findings in depth. For each finding: present the evidence, interpret its meaning, connect it to the research objectives, and compare with prior literature using citations. Use detailed paragraphs, not bullet points."
-      : `Continue the results and discussion (part ${chunk + 1} of ${total}). Present additional findings and their implications. Compare and contrast with existing literature. Discuss theoretical and practical implications in depth.`,
+      ? "Present and discuss the main findings in depth. For each finding: present the evidence, interpret its meaning, connect it to the research objectives. Where relevant, compare with prior literature. Use detailed paragraphs, not bullet points."
+      : `Continue the results and discussion (part ${chunk + 1} of ${total}). Present additional findings and their implications. Compare and contrast with existing literature where relevant. Discuss theoretical and practical implications in depth.`,
   Conclusion: () =>
-    "Write a comprehensive conclusion covering: (1) restatement of research objectives, (2) summary of key findings and their significance, (3) theoretical contributions, (4) practical implications and recommendations, (5) limitations of the study, (6) directions for future research.",
+    "Write a comprehensive conclusion covering: (1) restatement of research objectives, (2) summary of key findings and their significance, (3) theoretical and practical contributions, (4) limitations of the study, (5) directions for future research. Write entirely from the paper's own findings.",
 };
 
 function buildPrompt(
@@ -156,6 +172,7 @@ function buildPrompt(
   const localName = localizeSection(sectionName, language);
   const partNote = totalChunks > 1 ? ` (Part ${chunkIndex + 1} of ${totalChunks})` : "";
   const guide = SECTION_GUIDES[sectionName]?.(language, chunkIndex, totalChunks) ?? "Write this section thoroughly and academically.";
+  const citationRule = CITATION_RULES[sectionName] ?? "Use APA in-text citations (Author, Year) where appropriate.";
   const continuationNote =
     chunkIndex > 0
       ? "\nThis is a continuation — do not repeat content from previous parts. Continue naturally and coherently."
@@ -175,9 +192,9 @@ ${continuationNote}
 CONTENT GUIDE:
 ${guide}
 
-WORD COUNT: This section MUST be at least ${wordTarget} words long. Write in full, dense academic paragraphs. Be thorough and detailed — do not stop early. Every paragraph must be substantive and well-supported by citations.
+WORD COUNT: This section MUST be at least ${wordTarget} words long. Write in full, dense academic paragraphs. Be thorough and detailed — do not stop early.
 
-CITATION STYLE: Use APA in-text format: (Author, Year). Derive the author's last name from the references provided. Cite frequently and appropriately throughout.
+CITATION RULE: ${citationRule}
 
 FORMATTING: Write in continuous prose paragraphs. No bullet points. No subheadings unless academically appropriate.`;
 }
