@@ -25,12 +25,10 @@ const PAGE_OPTIONS = [4, 5, 6, 7, 8, 10, 12, 15, 20, 25, 30];
 const REF_OPTIONS = [5, 8, 10, 15, 20, 25];
 const MAX_CHUNK_WORDS = 1300;
 
-// Localized section names for headers in the output
 const SECTION_NAMES: Record<string, Record<string, string>> = {
   Indonesian: {
     Abstract: "Abstrak",
     Introduction: "Pendahuluan",
-    "Literature Review": "Tinjauan Pustaka",
     Methodology: "Metodologi Penelitian",
     "Results and Discussion": "Hasil dan Pembahasan",
     Conclusion: "Penutup",
@@ -39,7 +37,6 @@ const SECTION_NAMES: Record<string, Record<string, string>> = {
   Spanish: {
     Abstract: "Resumen",
     Introduction: "Introducción",
-    "Literature Review": "Revisión de Literatura",
     Methodology: "Metodología",
     "Results and Discussion": "Resultados y Discusión",
     Conclusion: "Conclusión",
@@ -48,7 +45,6 @@ const SECTION_NAMES: Record<string, Record<string, string>> = {
   French: {
     Abstract: "Résumé",
     Introduction: "Introduction",
-    "Literature Review": "Revue de Littérature",
     Methodology: "Méthodologie",
     "Results and Discussion": "Résultats et Discussion",
     Conclusion: "Conclusion",
@@ -57,7 +53,6 @@ const SECTION_NAMES: Record<string, Record<string, string>> = {
   German: {
     Abstract: "Zusammenfassung",
     Introduction: "Einleitung",
-    "Literature Review": "Literaturüberblick",
     Methodology: "Methodik",
     "Results and Discussion": "Ergebnisse und Diskussion",
     Conclusion: "Fazit",
@@ -66,7 +61,6 @@ const SECTION_NAMES: Record<string, Record<string, string>> = {
   Portuguese: {
     Abstract: "Resumo",
     Introduction: "Introdução",
-    "Literature Review": "Revisão de Literatura",
     Methodology: "Metodologia",
     "Results and Discussion": "Resultados e Discussão",
     Conclusion: "Conclusão",
@@ -79,7 +73,7 @@ function getLocalizedName(sectionName: string, language: string): string {
 }
 
 interface Chunk {
-  sectionName: string; // internal English key
+  sectionName: string;
   sectionNumber: number;
   chunkIndex: number;
   totalChunks: number;
@@ -90,14 +84,14 @@ function buildChunks(pages: number): Chunk[] {
   const totalWords = pages * 500;
   const bodyWords = totalWords - 250;
 
+  // Literature Review removed — Introduction expanded to cover theory/framework
   const sectionDefs = [
     { name: "Abstract",               number: 0, words: 250 },
-    { name: "Introduction",           number: 1, words: Math.round(bodyWords * 0.15) },
-    { name: "Literature Review",      number: 2, words: Math.round(bodyWords * 0.27) },
-    { name: "Methodology",            number: 3, words: Math.round(bodyWords * 0.20) },
-    { name: "Results and Discussion", number: 4, words: Math.round(bodyWords * 0.28) },
-    { name: "Conclusion",             number: 5, words: Math.round(bodyWords * 0.10) },
-    { name: "References",             number: 6, words: 0 },
+    { name: "Introduction",           number: 1, words: Math.round(bodyWords * 0.25) },
+    { name: "Methodology",            number: 2, words: Math.round(bodyWords * 0.20) },
+    { name: "Results and Discussion", number: 3, words: Math.round(bodyWords * 0.40) },
+    { name: "Conclusion",             number: 4, words: Math.round(bodyWords * 0.15) },
+    { name: "References",             number: 5, words: 0 },
   ];
 
   const chunks: Chunk[] = [];
@@ -130,32 +124,50 @@ function progressLabel(chunk: Chunk, language: string): string {
 }
 
 export default function PaperGenerator() {
-  const [title, setTitle] = useState("");
-  const [pages, setPages] = useState(8);
-  const [numRefs, setNumRefs] = useState(10);
+  const [title, setTitle]       = useState("");
+  const [pages, setPages]       = useState(8);
+  const [numRefs, setNumRefs]   = useState(10);
   const [language, setLanguage] = useState("Indonesian");
 
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState("");
+  // Law inputs
+  const [lawInput, setLawInput] = useState("");
+  const [laws, setLaws]         = useState<string[]>([]);
+  const [lawStatuses, setLawStatuses] = useState<Record<string, "ok" | "not_found">>({});
 
+  const [status, setStatus]           = useState<Status>("idle");
+  const [error, setError]             = useState("");
   const [chunkOutputs, setChunkOutputs] = useState<string[]>([]);
   const [streamingText, setStreamingText] = useState("");
   const [activeLabel, setActiveLabel] = useState("");
 
-  const [bibliography, setBibliography] = useState<string[]>([]);
+  const [bibliography, setBibliography]   = useState<string[]>([]);
   const [citationContext, setCitationContext] = useState("");
-  const [chunks, setChunks] = useState<Chunk[]>([]);
+  const [lawContext, setLawContext]       = useState("");
+  const [chunks, setChunks]             = useState<Chunk[]>([]);
 
-  const abortRef = useRef<AbortController | null>(null);
+  const abortRef  = useRef<AbortController | null>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
-  const displayOutput = chunkOutputs.join("") + streamingText;
+  const displayOutput  = chunkOutputs.join("") + streamingText;
   const completedCount = chunkOutputs.length;
+
+  function addLaw() {
+    const trimmed = lawInput.trim();
+    if (!trimmed || laws.includes(trimmed)) return;
+    setLaws((prev) => [...prev, trimmed]);
+    setLawInput("");
+  }
+
+  function removeLaw(law: string) {
+    setLaws((prev) => prev.filter((l) => l !== law));
+    setLawStatuses((prev) => { const next = { ...prev }; delete next[law]; return next; });
+  }
 
   const runChunks = useCallback(async (
     fromIdx: number,
     allChunks: Chunk[],
     ctxCitation: string,
+    ctxLaw: string,
     biblio: string[],
     lang: string,
   ) => {
@@ -168,14 +180,13 @@ export default function PaperGenerator() {
 
       const header = chunkHeader(chunk, lang);
 
-      // References: inject bibliography directly, no AI call
+      // References: inject directly, no AI
       if (chunk.sectionName === "References") {
-        const refLocalName = getLocalizedName("References", lang);
+        const localName = getLocalizedName("References", lang);
         const refText =
-          `\n\n## ${refLocalName}\n\n` +
+          `\n\n## ${localName}\n\n` +
           (biblio.length > 0 ? biblio.join("\n\n") : "*Tidak ada referensi yang ditemukan.*");
         setChunkOutputs((prev) => [...prev, refText]);
-        setStreamingText("");
         continue;
       }
 
@@ -194,6 +205,7 @@ export default function PaperGenerator() {
             title,
             language: lang,
             citationContext: ctxCitation,
+            lawContext: ctxLaw,
             sectionName: chunk.sectionName,
             sectionNumber: chunk.sectionNumber,
             chunkIndex: chunk.chunkIndex,
@@ -213,10 +225,7 @@ export default function PaperGenerator() {
         const decoder = new TextDecoder();
 
         while (true) {
-          if (abort.signal.aborted) {
-            setStatus("paused");
-            return;
-          }
+          if (abort.signal.aborted) { setStatus("paused"); return; }
           const { done, value } = await reader.read();
           if (done) break;
           chunkText += decoder.decode(value, { stream: true });
@@ -227,11 +236,8 @@ export default function PaperGenerator() {
         setChunkOutputs((prev) => [...prev, chunkText]);
         setStreamingText("");
       } catch (e: unknown) {
-        if (e instanceof Error && e.name === "AbortError") {
-          setStatus("paused");
-          return;
-        }
-        setError("Terjadi kesalahan jaringan. Klik Continue untuk melanjutkan.");
+        if (e instanceof Error && e.name === "AbortError") { setStatus("paused"); return; }
+        setError("Terjadi kesalahan. Klik Continue untuk melanjutkan.");
         setStatus("error");
         return;
       }
@@ -250,45 +256,56 @@ export default function PaperGenerator() {
     setError("");
     setStatus("fetching_refs");
 
-    // 1. Fetch refs
+    // 1. Fetch OpenAlex refs + Wikisource law texts in parallel
     let ctxCitation = "";
     let biblio: string[] = [];
-    try {
-      const res = await fetch("/api/generate-paper", {
+    let ctxLaw = "";
+
+    const [refsRes, lawsRes] = await Promise.allSettled([
+      fetch("/api/generate-paper", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode: "refs", title: title.trim(), numRefs }),
-      });
-      const data = await res.json();
-      biblio = data.bibliography ?? [];
-      ctxCitation = data.citationContext ?? "";
-    } catch {
-      // non-fatal
+      }).then((r) => r.json()),
+      laws.length > 0
+        ? fetch("/api/generate-paper", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mode: "laws", laws }),
+          }).then((r) => r.json())
+        : Promise.resolve(null),
+    ]);
+
+    if (refsRes.status === "fulfilled") {
+      biblio = refsRes.value.bibliography ?? [];
+      ctxCitation = refsRes.value.citationContext ?? "";
     }
+
+    if (lawsRes.status === "fulfilled" && lawsRes.value) {
+      ctxLaw = lawsRes.value.lawContext ?? "";
+      // Update law status indicators
+      const statuses: Record<string, "ok" | "not_found"> = {};
+      laws.forEach((l) => { statuses[l] = (lawsRes.value.notFound ?? []).includes(l) ? "not_found" : "ok"; });
+      setLawStatuses(statuses);
+    }
+
     setBibliography(biblio);
     setCitationContext(ctxCitation);
+    setLawContext(ctxLaw);
 
-    // 2. Build chunks
     const allChunks = buildChunks(pages);
     setChunks(allChunks);
 
-    // 3. Generate
-    await runChunks(0, allChunks, ctxCitation, biblio, language);
+    await runChunks(0, allChunks, ctxCitation, ctxLaw, biblio, language);
   }
 
   async function handleContinue() {
     if (!chunks.length) return;
-    await runChunks(completedCount, chunks, citationContext, bibliography, language);
+    await runChunks(completedCount, chunks, citationContext, lawContext, bibliography, language);
   }
 
-  function handleStop() {
-    abortRef.current?.abort();
-  }
-
-  function handleCopy() {
-    navigator.clipboard.writeText(displayOutput);
-  }
-
+  function handleStop() { abortRef.current?.abort(); }
+  function handleCopy() { navigator.clipboard.writeText(displayOutput); }
   function handleDownload() {
     const blob = new Blob([displayOutput], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -299,8 +316,8 @@ export default function PaperGenerator() {
     URL.revokeObjectURL(url);
   }
 
-  const isRunning = status === "fetching_refs" || status === "generating";
-  const canContinue = (status === "paused" || status === "error") && completedCount < chunks.length;
+  const isRunning     = status === "fetching_refs" || status === "generating";
+  const canContinue   = (status === "paused" || status === "error") && completedCount < chunks.length;
   const totalChunkCount = chunks.length;
 
   return (
@@ -310,17 +327,17 @@ export default function PaperGenerator() {
         <div className="flex items-center gap-3 mb-2">
           <span className="text-3xl">✍️</span>
           <h1 className="text-2xl font-bold text-white">Paper Generator</h1>
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20">
-            Beta
-          </span>
+          <span className="text-xs font-medium px-2 py-0.5 rounded-full border bg-amber-500/10 text-amber-400 border-amber-500/20">Beta</span>
         </div>
         <p className="text-zinc-500 text-sm leading-relaxed">
-          Generate full academic papers from a title. APA citation style. References from OpenAlex. Pause and continue anytime.
+          Generate full academic papers from a title. APA citations from OpenAlex. Indonesian laws fetched from Wikisource. Pause and continue anytime.
         </p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleGenerate} className="flex flex-col gap-4 mb-8">
+
+        {/* Title */}
         <div>
           <label className="block text-xs font-medium text-zinc-400 mb-1.5">Judul Paper</label>
           <input
@@ -333,94 +350,115 @@ export default function PaperGenerator() {
           />
         </div>
 
+        {/* Options row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Halaman</label>
-            <select
-              value={pages}
-              onChange={(e) => setPages(Number(e.target.value))}
-              disabled={isRunning}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors"
-            >
+            <select value={pages} onChange={(e) => setPages(Number(e.target.value))} disabled={isRunning}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors">
               {PAGE_OPTIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p} halaman (~{(p * 500).toLocaleString()} kata)
-                </option>
+                <option key={p} value={p}>{p} halaman (~{(p * 500).toLocaleString()} kata)</option>
               ))}
             </select>
           </div>
-
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Referensi</label>
-            <select
-              value={numRefs}
-              onChange={(e) => setNumRefs(Number(e.target.value))}
-              disabled={isRunning}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors"
-            >
-              {REF_OPTIONS.map((r) => (
-                <option key={r} value={r}>{r} referensi</option>
-              ))}
+            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Referensi Jurnal</label>
+            <select value={numRefs} onChange={(e) => setNumRefs(Number(e.target.value))} disabled={isRunning}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors">
+              {REF_OPTIONS.map((r) => (<option key={r} value={r}>{r} referensi</option>))}
             </select>
           </div>
-
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1.5">Bahasa</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              disabled={isRunning}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors"
-            >
-              {LANGUAGES.map((l) => (
-                <option key={l.value} value={l.value}>{l.label}</option>
-              ))}
+            <select value={language} onChange={(e) => setLanguage(e.target.value)} disabled={isRunning}
+              className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-violet-500 transition-colors">
+              {LANGUAGES.map((l) => (<option key={l.value} value={l.value}>{l.label}</option>))}
             </select>
           </div>
         </div>
 
+        {/* Law input */}
+        <div>
+          <label className="block text-xs font-medium text-zinc-400 mb-1.5">
+            Undang-Undang / Peraturan
+            <span className="ml-1.5 text-zinc-600 font-normal normal-case">— opsional, teks diambil dari Wikisource</span>
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={lawInput}
+              onChange={(e) => setLawInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLaw(); } }}
+              placeholder="e.g. UU No. 35 Tahun 2009 tentang Narkotika"
+              disabled={isRunning}
+              className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+            />
+            <button
+              type="button"
+              onClick={addLaw}
+              disabled={!lawInput.trim() || isRunning}
+              className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-300 text-sm font-medium transition-colors shrink-0"
+            >
+              + Tambah
+            </button>
+          </div>
+
+          {/* Law list */}
+          {laws.length > 0 && (
+            <div className="mt-2 flex flex-col gap-1.5">
+              {laws.map((law) => (
+                <div key={law} className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                  <span className="text-xs text-zinc-300 flex-1">{law}</span>
+                  {lawStatuses[law] === "ok" && (
+                    <span className="text-xs text-green-500">✓ ditemukan</span>
+                  )}
+                  {lawStatuses[law] === "not_found" && (
+                    <span className="text-xs text-amber-500">tidak ada di Wikisource</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeLaw(law)}
+                    disabled={isRunning}
+                    className="text-zinc-600 hover:text-zinc-400 transition-colors text-xs ml-1 disabled:opacity-40"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
         <div className="flex items-center gap-3 flex-wrap">
           {!isRunning && !canContinue && (
-            <button
-              type="submit"
-              disabled={!title.trim()}
-              className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-sm font-medium transition-colors"
-            >
+            <button type="submit" disabled={!title.trim()}
+              className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white text-sm font-medium transition-colors">
               Generate Paper
             </button>
           )}
-
           {isRunning && (
-            <button
-              type="button"
-              onClick={handleStop}
-              className="px-6 py-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-medium transition-colors flex items-center gap-2"
-            >
+            <button type="button" onClick={handleStop}
+              className="px-6 py-2.5 rounded-xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 text-sm font-medium transition-colors flex items-center gap-2">
               <span className="w-3.5 h-3.5 rounded-full border-2 border-red-400 border-t-transparent animate-spin" />
               Pause
             </button>
           )}
-
           {canContinue && (
             <>
-              <button
-                type="button"
-                onClick={handleContinue}
-                className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors"
-              >
+              <button type="button" onClick={handleContinue}
+                className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium transition-colors">
                 Continue ({completedCount}/{totalChunkCount})
               </button>
-              <button
-                type="submit"
-                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-sm font-medium transition-colors"
-              >
+              <button type="submit"
+                className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-sm font-medium transition-colors">
                 Mulai ulang
               </button>
             </>
           )}
 
           {status === "fetching_refs" && (
-            <p className="text-xs text-zinc-500 animate-pulse">Mengambil referensi dari OpenAlex…</p>
+            <p className="text-xs text-zinc-500 animate-pulse">Mengambil referensi & teks UU…</p>
           )}
           {status === "generating" && activeLabel && (
             <p className="text-xs text-zinc-500 animate-pulse">
@@ -428,9 +466,7 @@ export default function PaperGenerator() {
               {totalChunkCount > 0 && <span className="text-zinc-600"> — {completedCount}/{totalChunkCount}</span>}
             </p>
           )}
-          {status === "paused" && (
-            <p className="text-xs text-amber-500">Dijeda. Klik Continue untuk melanjutkan.</p>
-          )}
+          {status === "paused" && <p className="text-xs text-amber-500">Dijeda. Klik Continue untuk melanjutkan.</p>}
           {status === "done" && (
             <p className="text-xs text-green-500">
               Selesai — {Math.round(displayOutput.split(/\s+/).length).toLocaleString()} kata.
@@ -444,10 +480,8 @@ export default function PaperGenerator() {
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm text-red-400 mb-6 flex items-center justify-between gap-3">
           <span>{error}</span>
           {canContinue && (
-            <button
-              onClick={handleContinue}
-              className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors"
-            >
+            <button onClick={handleContinue}
+              className="shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 transition-colors">
               Continue
             </button>
           )}
@@ -459,34 +493,23 @@ export default function PaperGenerator() {
         <div className="flex flex-col gap-3">
           {(status === "done" || status === "paused") && (
             <div className="flex items-center justify-between">
-              <p className="text-xs text-zinc-600">
-                ~{Math.round(displayOutput.split(/\s+/).length).toLocaleString()} kata
-              </p>
+              <p className="text-xs text-zinc-600">~{Math.round(displayOutput.split(/\s+/).length).toLocaleString()} kata</p>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCopy}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 transition-colors"
-                >
+                <button onClick={handleCopy}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 transition-colors">
                   Copy
                 </button>
-                <button
-                  onClick={handleDownload}
-                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-violet-600/10 text-violet-400 border border-violet-500/20 hover:bg-violet-600/20 transition-colors"
-                >
+                <button onClick={handleDownload}
+                  className="text-xs font-medium px-3 py-1.5 rounded-lg bg-violet-600/10 text-violet-400 border border-violet-500/20 hover:bg-violet-600/20 transition-colors">
                   Download .md
                 </button>
               </div>
             </div>
           )}
-
-          <div
-            ref={outputRef}
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap font-mono"
-          >
+          <div ref={outputRef}
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap font-mono">
             {displayOutput}
-            {isRunning && (
-              <span className="inline-block w-2 h-4 bg-violet-400 animate-pulse ml-0.5 align-middle" />
-            )}
+            {isRunning && <span className="inline-block w-2 h-4 bg-violet-400 animate-pulse ml-0.5 align-middle" />}
           </div>
         </div>
       )}
@@ -495,9 +518,7 @@ export default function PaperGenerator() {
         <div className="text-center py-16 text-zinc-700">
           <p className="text-5xl mb-4">📝</p>
           <p className="text-sm">Masukkan judul dan klik Generate.</p>
-          <p className="text-xs mt-2 text-zinc-700">
-            Sitasi APA · Referensi dari OpenAlex · Bisa pause & continue
-          </p>
+          <p className="text-xs mt-2 text-zinc-700">Sitasi APA · Referensi OpenAlex · Teks UU dari Wikisource · Pause & continue</p>
         </div>
       )}
     </div>
