@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { extractPdfText } from "@/lib/extractPdfClient";
 
 type Status = "idle" | "fetching_refs" | "generating" | "paused" | "done" | "error";
 
@@ -183,17 +184,10 @@ export default function PaperGenerator() {
     const name = file.name.replace(/\.pdf$/i, "");
     setUploadedLaws((prev) => [...prev, { id, name, text: "", pages: 0, status: "uploading" }]);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
-      const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal ekstrak PDF");
+      const { text, pages } = await extractPdfText(file, 6000);
       setUploadedLaws((prev) =>
-        prev.map((l) =>
-          l.id === id ? { ...l, text: (data.text as string).slice(0, 6000), pages: data.pages as number, status: "done" } : l
-        )
+        prev.map((l) => l.id === id ? { ...l, text, pages, status: "done" } : l)
       );
     } catch (e) {
       setUploadedLaws((prev) =>
