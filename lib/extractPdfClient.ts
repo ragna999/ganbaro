@@ -11,7 +11,7 @@ function ensureWorker() {
 
 export async function extractPdfText(
   file: File,
-  maxChars = 6000
+  maxChars = 40000
 ): Promise<{ text: string; pages: number }> {
   ensureWorker();
   const arrayBuffer = await file.arrayBuffer();

@@ -8,5 +8,5 @@ export const nvidia = new OpenAI({
 export const MODELS = {
   repoExplainer: "meta/llama-3.3-70b-instruct",
   docQA: "meta/llama-3.1-70b-instruct",
-  paperGenerator: "meta/llama-3.3-70b-instruct",
+  paperGenerator: "mistralai/mistral-medium-3.5-128b",
 } as const;
