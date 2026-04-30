@@ -80,6 +80,15 @@ interface Chunk {
   wordTarget: number;
 }
 
+interface UploadedLaw {
+  id: string;
+  name: string;
+  text: string;
+  pages: number;
+  status: "uploading" | "done" | "error";
+  error?: string;
+}
+
 function buildChunks(pages: number): Chunk[] {
   const totalWords = pages * 500;
   const bodyWords = totalWords - 250;
@@ -133,6 +142,7 @@ export default function PaperGenerator() {
   const [lawInput, setLawInput] = useState("");
   const [laws, setLaws]         = useState<string[]>([]);
   const [lawStatuses, setLawStatuses] = useState<Record<string, "ok" | "not_found">>({});
+  const [uploadedLaws, setUploadedLaws] = useState<UploadedLaw[]>([]);
 
   const [status, setStatus]           = useState<Status>("idle");
   const [error, setError]             = useState("");
@@ -145,8 +155,9 @@ export default function PaperGenerator() {
   const [lawContext, setLawContext]       = useState("");
   const [chunks, setChunks]             = useState<Chunk[]>([]);
 
-  const abortRef  = useRef<AbortController | null>(null);
-  const outputRef = useRef<HTMLDivElement>(null);
+  const abortRef     = useRef<AbortController | null>(null);
+  const outputRef    = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const displayOutput  = chunkOutputs.join("") + streamingText;
   const completedCount = chunkOutputs.length;
@@ -161,6 +172,36 @@ export default function PaperGenerator() {
   function removeLaw(law: string) {
     setLaws((prev) => prev.filter((l) => l !== law));
     setLawStatuses((prev) => { const next = { ...prev }; delete next[law]; return next; });
+  }
+
+  function removeUploadedLaw(id: string) {
+    setUploadedLaws((prev) => prev.filter((l) => l.id !== id));
+  }
+
+  async function handleFileUpload(file: File) {
+    const id = `${Date.now()}-${Math.random()}`;
+    const name = file.name.replace(/\.pdf$/i, "");
+    setUploadedLaws((prev) => [...prev, { id, name, text: "", pages: 0, status: "uploading" }]);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/extract-pdf", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Gagal ekstrak PDF");
+      setUploadedLaws((prev) =>
+        prev.map((l) =>
+          l.id === id ? { ...l, text: (data.text as string).slice(0, 6000), pages: data.pages as number, status: "done" } : l
+        )
+      );
+    } catch (e) {
+      setUploadedLaws((prev) =>
+        prev.map((l) =>
+          l.id === id ? { ...l, status: "error", error: e instanceof Error ? e.message : "Gagal ekstrak" } : l
+        )
+      );
+    }
   }
 
   const runChunks = useCallback(async (
@@ -289,6 +330,13 @@ export default function PaperGenerator() {
       setLawStatuses(statuses);
     }
 
+    // Combine Wikisource law context with uploaded PDFs
+    const uploadedCtx = uploadedLaws
+      .filter((l) => l.status === "done")
+      .map((l) => `=== ${l.name} (uploaded) ===\n${l.text}`)
+      .join("\n\n");
+    if (uploadedCtx) ctxLaw = [ctxLaw, uploadedCtx].filter(Boolean).join("\n\n");
+
     setBibliography(biblio);
     setCitationContext(ctxCitation);
     setLawContext(ctxLaw);
@@ -381,15 +429,17 @@ export default function PaperGenerator() {
         <div>
           <label className="block text-xs font-medium text-zinc-400 mb-1.5">
             Undang-Undang / Peraturan
-            <span className="ml-1.5 text-zinc-600 font-normal normal-case">— opsional, teks diambil dari Wikisource</span>
+            <span className="ml-1.5 text-zinc-600 font-normal normal-case">— opsional</span>
           </label>
+
+          {/* Wikisource row */}
           <div className="flex gap-2">
             <input
               type="text"
               value={lawInput}
               onChange={(e) => setLawInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addLaw(); } }}
-              placeholder="e.g. UU No. 35 Tahun 2009 tentang Narkotika"
+              placeholder="e.g. UU No. 35 Tahun 2009 (dari Wikisource)"
               disabled={isRunning}
               className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
             />
@@ -403,26 +453,62 @@ export default function PaperGenerator() {
             </button>
           </div>
 
-          {/* Law list */}
+          {/* PDF upload row */}
+          <div className="mt-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) { handleFileUpload(file); e.target.value = ""; }
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isRunning}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-zinc-700 hover:border-violet-500/50 hover:bg-violet-500/5 disabled:opacity-40 text-zinc-500 hover:text-zinc-300 text-xs font-medium transition-colors w-full justify-center"
+            >
+              <span>↑</span> Upload PDF UU / Peraturan
+            </button>
+          </div>
+
+          {/* Wikisource law list */}
           {laws.length > 0 && (
             <div className="mt-2 flex flex-col gap-1.5">
               {laws.map((law) => (
                 <div key={law} className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                  <span className="text-xs text-zinc-500 shrink-0">Wikisource</span>
                   <span className="text-xs text-zinc-300 flex-1">{law}</span>
-                  {lawStatuses[law] === "ok" && (
-                    <span className="text-xs text-green-500">✓ ditemukan</span>
+                  {lawStatuses[law] === "ok" && <span className="text-xs text-green-500">✓</span>}
+                  {lawStatuses[law] === "not_found" && <span className="text-xs text-amber-500">tidak ditemukan</span>}
+                  <button type="button" onClick={() => removeLaw(law)} disabled={isRunning}
+                    className="text-zinc-600 hover:text-zinc-400 transition-colors text-xs ml-1 disabled:opacity-40">✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Uploaded PDF list */}
+          {uploadedLaws.length > 0 && (
+            <div className="mt-1.5 flex flex-col gap-1.5">
+              {uploadedLaws.map((law) => (
+                <div key={law.id} className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                  <span className="text-xs text-violet-500/80 shrink-0">PDF</span>
+                  <span className="text-xs text-zinc-300 flex-1 truncate">{law.name}</span>
+                  {law.status === "uploading" && (
+                    <span className="text-xs text-zinc-500 animate-pulse">mengekstrak…</span>
                   )}
-                  {lawStatuses[law] === "not_found" && (
-                    <span className="text-xs text-amber-500">tidak ada di Wikisource</span>
+                  {law.status === "done" && (
+                    <span className="text-xs text-green-500">✓ {law.pages}hal</span>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => removeLaw(law)}
-                    disabled={isRunning}
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors text-xs ml-1 disabled:opacity-40"
-                  >
-                    ✕
-                  </button>
+                  {law.status === "error" && (
+                    <span className="text-xs text-red-400">{law.error}</span>
+                  )}
+                  <button type="button" onClick={() => removeUploadedLaw(law.id)} disabled={isRunning}
+                    className="text-zinc-600 hover:text-zinc-400 transition-colors text-xs ml-1 disabled:opacity-40">✕</button>
                 </div>
               ))}
             </div>
