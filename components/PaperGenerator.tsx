@@ -86,7 +86,7 @@ function buildChunks(pages: number): Chunk[] {
 
   // Literature Review removed — Introduction expanded to cover theory/framework
   const sectionDefs = [
-    { name: "Abstract",               number: 0, words: 250 },
+    { name: "Abstract",               number: 0, words: 500 },
     { name: "Introduction",           number: 1, words: Math.round(bodyWords * 0.25) },
     { name: "Methodology",            number: 2, words: Math.round(bodyWords * 0.20) },
     { name: "Results and Discussion", number: 3, words: Math.round(bodyWords * 0.40) },

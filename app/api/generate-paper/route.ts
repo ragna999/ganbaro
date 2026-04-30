@@ -166,35 +166,42 @@ function localizeSection(sectionName: string, language: string): string {
 
 const CITATION_RULES: Record<string, string> = {
   Abstract:
-    "Do NOT use any in-text citations. Write entirely from the paper's own findings.",
+    "Do NOT use any in-text citations. After the Indonesian abstract body, write 'Kata Kunci:' with 4–6 relevant keywords. Then write 'Abstract:' with the full English translation of the abstract, followed by 'Keywords:' with the English keywords.",
   Introduction:
-    "Use APA citations (Author, Year) to support background claims and justify the research gap. For laws, cite as 'Pasal N UU No. X Tahun Y' or '(UU No. X Tahun Y)'. Cite only where claims need external support.",
+    "Use APA 6 bodynote in-text citations (Author, Year) to support every major claim — background, theoretical context, and research gap. For laws, cite as '(Pasal N UU No. X Tahun Y)'. Prioritize literature published within the last 5 years.",
   Methodology:
-    "Cite (Author, Year) only when justifying research design choices. For laws, cite relevant pasal by number. Do not cite for your own procedural steps.",
+    "Use APA 6 bodynote (Author, Year) only when justifying the choice of research type, approach, or analytical method. For laws, cite the relevant pasal. Prioritize references from the last 5 years. Keep citations minimal but precise.",
   "Results and Discussion":
-    "Use (Author, Year) only when comparing findings with prior literature. Cite specific pasal when discussing legal provisions. Your own findings and analysis need no citation.",
+    "Use APA 6 bodynote (Author, Year) when linking findings to legal theories, court decisions, regulations (cite pasal specifically), and scholarly literature. Your own analytical interpretations of findings do not need citations. Prioritize references from the last 5 years.",
   Conclusion:
-    "Do NOT use in-text citations. Summarize only from the paper's own findings and arguments.",
+    "Do NOT use any in-text citations. Write only from the paper's own conclusions and recommendations.",
 };
 
 // ── Section guides ────────────────────────────────────────────────────────────
 
 const SECTION_GUIDES: Record<string, (chunk: number, total: number) => string> = {
   Abstract: () =>
-    "Write a structured abstract covering: research background and problem, objectives, methodology, key findings, and conclusions. Be precise. No citations.",
+    `Write a concise, clear, and informative abstract for a legal journal article consisting of exactly four elements in this order: (1) context and legal problem background, (2) research objectives, (3) research method — state the type (normative/empirical/combination) and approach(es) used, (4) main findings and research contributions. Length: 150–250 words. Style: dense, objective, academic — no circumlocutions, no citations, no sub-headings. After the abstract body, write "Kata Kunci:" followed by 4–6 relevant keywords in Indonesian. Then on a new line write "Abstract:" and provide the full English translation of the abstract, followed by "Keywords:" with the English keywords.`,
+
   Introduction: () =>
-    "Write a comprehensive introduction covering: (1) research background and context, (2) theoretical/conceptual framework relevant to the topic — discuss key theories, concepts, and legal basis (cite laws by pasal where relevant), (3) identification of the research gap supported by literature, (4) research objectives and questions, (5) significance of the study, (6) brief overview of the paper structure.",
+    `Write a systematic and academic introduction for a legal journal article. Cover all of these elements in a single continuous flowing prose — absolutely NO sub-sections, NO sub-headings, NO bullet points, NO numbered lists: (1) research problem background — the legal phenomenon or issue, (2) theoretical context — connect with relevant legal theories, applicable regulations, and court decisions, (3) research urgency and its current relevance, (4) research gap clearly identified and supported by literature, (5) research objectives and research questions, (6) academic and practical relevance of the study. The text must flow logically, contain strong argumentation, and clarify the research position in contemporary legal discourse. Use formal academic Indonesian legal writing style. Every major claim must be backed by an APA 6 bodynote citation.`,
+
   Methodology: () =>
-    "Write a detailed methodology section covering: (1) research design and paradigm with justification, (2) data sources and collection methods, (3) analytical framework or instruments, (4) validity/reliability measures, (5) methodological limitations.",
+    `Write the research methodology section in exactly 2 paragraphs — narrative prose only, absolutely NO bullet points, NO numbering, NO sub-headings. Distribute all of the following naturally across the 2 paragraphs: (1) type of research — normative, empirical, or combination — with clear justification, (2) research approach — choose ONLY the approach(es) that genuinely fit the paper title from this list: statute approach, case approach, conceptual approach, comparative approach, empirical approach — do NOT use all of them; select only 1–3 that are appropriate and explain why, (3) sources and techniques for collecting primary and secondary legal materials, (4) data or legal material analysis technique, (5) methodological rationale consistent with the research objectives and scope. Write academically, formally, and argumentatively.`,
+
   "Results and Discussion": (chunk, total) =>
     chunk === 0
-      ? "Present and discuss the main findings in depth. For each finding: present the evidence, interpret its meaning, connect to research objectives. Where relevant, cite specific pasal from the provided laws and compare with scholarly literature."
-      : `Continue results and discussion (part ${chunk + 1} of ${total}). Present additional findings. Compare and contrast with existing literature and legal provisions where relevant. Discuss theoretical and practical implications.`,
+      ? `Write a structured, analytical, and argumentative results and discussion section for a legal journal article. Present the main research findings consistent with the type and approach of research used. For each finding: present the evidence or normative basis, interpret its legal meaning, connect to research objectives. Link findings with legal theories, applicable regulations — cite specific pasal — court decisions, and relevant scholarly literature. Provide critical legal analysis including: normative interpretation, legal comparison, identification of normative weaknesses or legal gaps (kekosongan norma), and conceptual and practical implications. The discussion must flow logically, be consistent with the research objectives, and strengthen the scientific legal argument.`
+      : `Continue the results and discussion (part ${chunk + 1} of ${total}). Continue analytical and argumentative discussion of further legal findings or issues. Maintain consistency with theories, regulations (cite pasal specifically), court decisions, and literature. Deepen critical legal analysis, normative interpretation, and discuss broader legal implications including de lege ferenda perspectives. Do not repeat content from previous parts.`,
+
   Conclusion: () =>
-    "Write a comprehensive conclusion covering: (1) restatement of research objectives, (2) summary of key findings, (3) theoretical and practical contributions, (4) study limitations, (5) recommendations and future research directions. No citations.",
+    `Write the closing section (Penutup) in exactly 1 paragraph that integrates both conclusion and recommendations. First part: formulate the conclusion based on the main research findings and arguments — do not repeat the discussion, but firmly assert the core results of the legal analysis in a systematic manner. Second part (in the same paragraph): provide operational and relevant recommendations covering legal theory development, regulatory improvement (de lege ferenda), law enforcement practice, and/or directions for further research. Use formal, objective language. No citations. Consistent with the research objectives and the overall flow of the paper.`,
 };
 
 // ── Prompt builder ────────────────────────────────────────────────────────────
+
+const KUHAP_NOTE =
+  "IMPORTANT: When referencing criminal procedure law, always use the latest KUHAP (UU No. 20 Tahun 2025), not the old UU No. 8 Tahun 1981.";
 
 function buildPrompt(
   title: string,
@@ -209,18 +216,20 @@ function buildPrompt(
   const localName = localizeSection(sectionName, language);
   const partNote = totalChunks > 1 ? ` (Part ${chunkIndex + 1} of ${totalChunks})` : "";
   const guide = SECTION_GUIDES[sectionName]?.(chunkIndex, totalChunks) ?? "Write this section thoroughly and academically.";
-  const citationRule = CITATION_RULES[sectionName] ?? "Use APA (Author, Year) and legal citations where appropriate.";
-  const continuation = chunkIndex > 0 ? "\nThis is a continuation — do not repeat previous content. Continue naturally." : "";
+  const citationRule = CITATION_RULES[sectionName] ?? "Use APA 6 bodynote (Author, Year) and legal citations where appropriate. Prioritize references from the last 5 years.";
+  const continuation = chunkIndex > 0 ? "\nThis is a continuation — do not repeat previous content. Continue naturally from where the previous part ended." : "";
 
   const lawBlock = lawContext
-    ? `\nPROVIDED LAWS — use these for accurate legal citations (cite as "Pasal N UU No. X Tahun Y"):\n${lawContext}`
+    ? `\nPROVIDED LAWS — use these for accurate legal citations (cite as "(Pasal N UU No. X Tahun Y)"):\n${lawContext}`
     : "";
 
-  return `You are an expert academic writer writing a section of a formal academic paper.
+  return `You are an expert academic legal writer writing a section of a formal Indonesian legal journal article (artikel jurnal hukum).
 
 PAPER TITLE: "${title}"
-LANGUAGE: Write entirely in ${language}. Use formal academic ${language}.
+LANGUAGE: Write entirely in ${language}. Use formal academic ${language} appropriate for legal scholarship.
 SECTION: ${localName}${partNote}
+
+${KUHAP_NOTE}
 
 ${citationContext}${lawBlock}
 
@@ -233,7 +242,7 @@ WORD COUNT: This section MUST be at least ${wordTarget} words. Write in full, de
 
 CITATION RULE: ${citationRule}
 
-FORMATTING: Continuous prose paragraphs only. No bullet points. No subheadings unless academically required.`;
+FORMATTING: Continuous prose paragraphs only. No bullet points. No numbered lists. No sub-headings unless the guide explicitly requires them.`;
 }
 
 // ── Route handler ─────────────────────────────────────────────────────────────
