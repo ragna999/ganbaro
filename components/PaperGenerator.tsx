@@ -453,10 +453,12 @@ export default function PaperGenerator() {
               ref={fileInputRef}
               type="file"
               accept=".pdf"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) { handleFileUpload(file); e.target.value = ""; }
+                const files = Array.from(e.target.files ?? []);
+                files.forEach(handleFileUpload);
+                e.target.value = "";
               }}
             />
             <button
