@@ -107,7 +107,7 @@ async function fetchLawText(lawInput: string): Promise<{ name: string; text: str
     const wikitext: string = page.revisions?.[0]?.slots?.main?.content ?? "";
     if (!wikitext) return null;
     const cleaned = cleanWikitext(wikitext);
-    return { name: lawInput.trim(), text: cleaned.slice(0, 40000) };
+    return { name: lawInput.trim(), text: cleaned.slice(0, 150000) };
   } catch {
     return null;
   }

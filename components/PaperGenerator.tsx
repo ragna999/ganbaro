@@ -185,7 +185,7 @@ export default function PaperGenerator() {
     setUploadedLaws((prev) => [...prev, { id, name, text: "", pages: 0, status: "uploading" }]);
 
     try {
-      const { text, pages } = await extractPdfText(file, 40000);
+      const { text, pages } = await extractPdfText(file, 150000);
       setUploadedLaws((prev) =>
         prev.map((l) => l.id === id ? { ...l, text, pages, status: "done" } : l)
       );
