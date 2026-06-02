@@ -27,6 +27,7 @@ export const tools: Tool[] = [
   { id: "clipper",   path: "/video-clipper",        icon: "🎬", label: "Video Clipper",         desc: "Upload a video and let AI find the best moments. Preview and download each clip.", category: "AI",      beta: false },
   { id: "vsplit",    path: "/video-splitter",       icon: "🎞️", label: "Video Splitter",        desc: "Split long videos into smaller chunks by duration. 5, 10, 15, or 30-minute parts.", category: "Utility", beta: false },
   { id: "rmbg",      path: "/remove-background",    icon: "🪄", label: "Remove Background",     desc: "Remove the background from any image using AI. Download as PNG. Runs in your browser.", category: "Utility", beta: false },
+  { id: "changebg",  path: "/change-background",    icon: "🎨", label: "Change Background",     desc: "Replace any image background with a clean solid color. Great for ID photos.", category: "Utility", beta: false },
   { id: "upscale",   path: "/image-upscaler",       icon: "🔭", label: "Image Upscaler",        desc: "Upscale images 2× or 4× with high-quality Lanczos resampling. Enlarge photos without blur. Runs in your browser.", category: "Utility", beta: false },
   { id: "papergen",  path: "/paper-generator",      icon: "✍️", label: "Paper Generator",       desc: "Generate a full academic paper from a title. Set page count, references, and language. Real refs from OpenAlex.", category: "AI", beta: false },
 ];
@@ -106,6 +107,11 @@ export const faqItems = [
     tool: "🪄 Remove Background",
     q: "What is Remove Background?",
     a: "Upload any image and AI will remove the background, leaving just the subject. The result downloads as a transparent PNG. Runs entirely in your browser using the U2-Net AI model — nothing is uploaded to a server. First run downloads the ~50MB model, subsequent uses are instant.",
+  },
+  {
+    tool: "🎨 Change Background",
+    q: "What is Change Background?",
+    a: "Upload an image and AI removes the original background, then places the subject on a solid color you choose. It includes common ID photo colors like white, red, blue, gray, and black, plus a custom color picker. Everything runs in your browser and downloads as PNG.",
   },
   {
     tool: "🎞️ Video Splitter",
