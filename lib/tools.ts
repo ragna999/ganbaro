@@ -14,6 +14,7 @@ export const tools: Tool[] = [
   { id: "reader",   path: "/pdf-reader",       icon: "🎧",  label: "PDF Reader",      desc: "Listen to any text-based PDF read aloud. Adjust speed and voice.",                category: "PDF"     },
   { id: "splitter", path: "/pdf-splitter",     icon: "✂️",  label: "PDF Splitter",    desc: "Split large PDFs into smaller chunks. Great before running OCR.",                 category: "PDF"     },
   { id: "ocr",      path: "/pdf-ocr",          icon: "🔍",  label: "PDF OCR",         desc: "Extract text from scanned PDFs. Output as a text-based PDF. Max 50 pages.",       category: "PDF"     },
+  { id: "pdf2img",  path: "/pdf-to-image",     icon: "🖼️",  label: "PDF to Image",    desc: "Convert PDF pages to PNG or JPEG images. Choose page range and quality.",          category: "PDF"     },
   { id: "ascii",    path: "/ascii-art",        icon: "🖼️",  label: "ASCII Art",       desc: "Convert any image into ASCII art. Download as PNG or JPG.",                       category: "Fun"     },
   { id: "compress", path: "/file-compressor",  icon: "📦",  label: "File Compressor", desc: "Compress images, PDFs, and DOCX files locally. Nothing is uploaded to a server.", category: "Utility" },
   { id: "img2pdf",  path: "/image-to-pdf",    icon: "📑",  label: "Image to PDF",    desc: "Combine multiple images into a single PDF. Reorder, choose page size, and download.", category: "Utility" },
@@ -55,6 +56,11 @@ export const faqItems = [
     tool: "🔍 PDF OCR",
     q: "What is PDF OCR?",
     a: "Upload a scanned PDF and this tool extracts the text using OCR. The result can be downloaded as a text-based PDF, ready for PDF Reader or Doc Q&A. Max 50 pages. Use PDF Splitter first for large files.",
+  },
+  {
+    tool: "🖼️ PDF to Image",
+    q: "What is PDF to Image?",
+    a: "Upload a PDF, choose a page range, output format (PNG or JPEG), and render scale, then convert pages into downloadable images. Everything runs in your browser, so the file is not uploaded to a server.",
   },
   {
     tool: "🖼️ ASCII Art",
